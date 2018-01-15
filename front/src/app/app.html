@@ -1,0 +1,96 @@
+<!--main>
+  <h1 class="title">Hello from Angular !</h1>
+
+  <img src="/img/logo.png">
+</main>
+<footer>
+  <a ng-href="{{app.url}}">Webpack Angular Starter</a>
+</footer>-->
+
+<div class="container" ng-controller="loginController">
+	<div class="text-center">
+		<div class="panel" ng-if="!signUpView">
+			<form class="form-auth" ng-if="!need2FA && !resetView">
+				<h2 class="form-auth-heading">Please sign in</h2>
+
+				<label for="email" class="sr-only">Email Address</label>
+				<input name="email" type="email" class="form-control" placeholder="Email address" autofocus ng-model="formData.email"/>
+
+				<label for="password" class="sr-only">Password</label>
+				<input name="password" type="password" class="form-control" placeholder="Password" ng-model="formData.password"/>
+				<div class="password-tip">
+					<span>* Attention! You have only 3 attempts.</span>
+				</div>
+				<input class="btn btn-lg btn-primary btn-block" type="submit" value="Sign In" ng-click="signIn()"/>
+
+				<span>Have no account? <a href="#" ng-click="setSignUpView(true)">Sign Up</a></span>
+				<br/>
+				<span><a href="#" ng-click="setResetView(true);">Forgot password?</a></span>
+				<br/>
+				<span>If you have any issues please write to:</span>
+				<br/>
+				<span><a href="mailto:support@arbidex-promo.com" target="_top">
+					support@arbidex-promo.com
+				</a></span>
+			</form>
+
+			<form class="form-auth" ng-if="need2FA">
+				<label for="token" class="sr-only">Code</label>
+				<input name="token" type="text" class="form-control" placeholder="Code" ng-model="formData.token"/>
+				<div class="password-tip">
+					<span>* Attention! You have only 3 attempts.</span>
+				</div>
+				<input class="btn btn-lg btn-primary btn-block" type="submit" value="Check" ng-click="check2FA();"/>
+			</form>
+		</div>
+
+		<div class="panel" ng-show="signUpView && !emailSended">
+			<form class="form-auth">
+				<h2 class="form-signin-heading">Please sign up</h2>
+
+				<label for="email" class="sr-only">Email Address</label>
+				<input name="email" type="email" class="form-control" placeholder="Email Address" ng-model="formData.email"/>
+
+				<label for="password" class="sr-only">Password</label>
+				<input name="password" type="password" class="form-control" placeholder="Password" ng-model="formData.password"/>
+
+				<label for="confirm" class="sr-only">Confirm password</label>
+				<input name="confirm" type="password" class="form-control" placeholder="Confirm password" ng-model="formData.confirm"/>
+				<div class="password-tip">
+					<span>* Password must be at least 8 characters long. It should contain uppercase and lowercase letters, numbers and special characters.</span>
+				</div>
+				<div class="g-recaptcha" data-sitekey="6LckSTcUAAAAAPOenKsHd-GtMvhrY7OJ9kQlf6XV"></div>
+				<input class="btn btn-lg btn-primary btn-block" type="submit" value="Sign Up" ng-click="signUp()" ng-if="!isEmailSending"/>
+
+				<a href="#" ng-click="setSignUpView(false)" ng-if="!isEmailSending">&larr; Sign In</a>
+				<span ng-if="isEmailSending">Email sending...</span>
+			</form>
+		</div>
+
+		<div class="panel" ng-if="resetView && !emailSended">
+			<form class="form-auth">
+				<h3 class="form-signin-heading">Please type your email</h3>
+
+				<label for="email" class="sr-only">Email Address</label>
+				<input name="email" type="email" class="form-control" placeholder="Email Address" ng-model="formData.email"/>
+
+				<input class="btn btn-lg btn-primary btn-block" type="submit" value="Reset Password" ng-click="resetPassword()"/>
+
+				<a href="#" ng-click="setResetView(false)">&larr; Sign In</a>
+			</form>
+		</div>
+
+		<div class="panel" ng-if="errorMessage.length">
+			<div class="message">
+				<div class="alert alert-danger" role="alert">
+					{{errorMessage}}
+				</div>
+			</div>
+		</div>
+
+		<div class="panel" ng-if="emailSended">
+			<h2>{{resetAnswer}}</h2>
+		</div>
+
+	</div>
+</div>

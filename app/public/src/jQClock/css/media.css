@@ -1,0 +1,45 @@
+html, body, .wrapper {
+	height: 100%;
+	width: 100%;
+}
+body {
+	background: url(../img/bg-tile.png) repeat;
+	font: bold 100px "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.wrapper {
+	width: 620px;
+	padding: 0;
+	margin: 50px auto;
+	text-align: center;
+}
+
+.holder {
+	margin: 20px auto 0;
+}
+
+.title,
+.cntSeparator {
+	color: rgba(0,0,0,0.6);
+	text-shadow: 2px 2px 3px rgba(255,255,255,0.1);
+}
+
+.cntSeparator {
+	margin-top: -10px;
+	font-size: 80px;
+}
+
+.subtitle {
+	text-align: left;
+	font-size: 20px;
+	width: 100%;
+	color: rgba(0,0,0,0.7);
+	text-shadow: .5px .5px .2px rgba(255,255,255,0.1);
+}
+
+.clearfix::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+

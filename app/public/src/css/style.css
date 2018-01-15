@@ -1,0 +1,223 @@
+html {
+	overflow-y: scroll;
+}
+
+body {
+	padding: 50px;
+	background-color: rgb(240,240,240);
+}
+
+.form-footer {
+	max-width: 330px;
+	padding: 0 15px;
+	margin: 0 auto;
+}
+
+.form-dash {
+	max-width: 330px;
+	padding: 15px;
+}
+
+.form-auth {
+	max-width: 330px;
+	padding: 15px;
+	margin: 0 auto;
+}
+.form-auth .form-auth-heading,
+.form-dash .form-auth-heading {
+	margin-bottom: 10px;
+}
+.form-auth .form-control,
+.form-dash .form-control,
+.form-doc .form-control{
+	position: relative;
+	box-sizing: border-box;
+	height: auto;
+	padding: 10px;
+	font-size: 16px;
+	margin-bottom: -1px;
+	border-radius: 0;
+}
+
+.form-auth .form-control:focus,
+.form-dash .form-control:focus {
+	z-index: 2;
+}
+.form-auth .form-control:first-child,
+.form-dash .form-control:first-child {
+	margin-bottom: -1px;
+	border-bottom-right-radius: 0;
+	border-bottom-left-radius: 0;
+}
+
+.form-auth .form-control:last-child,
+.form-dash .form-control:last-child {
+	margin-bottom: 10px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+}
+
+.form-auth input[type="submit"] ,
+.form-dash input[type="submit"]  {
+	margin: 10px 0;
+	cursor: pointer;
+}
+
+.form-doc input,
+.form-doc select {
+	width: 200px;
+}
+.form-doc input[type="submit"]  {
+	width: 200px;
+	cursor: pointer;
+}
+.form-doc .doc-container {
+	margin: 20px 0;
+}
+.clearfix::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+.form-auth select.form-control,
+.form-dash select.form-control,
+.form-doc select.form-control {
+	height: 45px;
+	padding: 0 5px;
+}
+
+.form-auth span,
+.form-dash span,
+.form-doc span {
+	line-height: 40px;
+}
+
+.form-auth button,
+.form-dash button,
+.form-doc button {
+	cursor: pointer;
+}
+
+.form-doc .alert {
+	margin: 10px 0;
+}
+
+.form-verified {
+	text-align: left;
+}
+.form-verified img {
+	margin: 0 10px 20px 0;
+	width: 300px;
+	float: left;
+}
+.form-verified button {
+	width: 300px;
+}
+
+.message {
+	max-width: 330px;
+	padding: 0 15px;
+	margin: 0 auto;
+}
+
+.password-tip {
+	font-size: 12px;
+	line-height: 0px;
+	width: 240px;
+	margin: 8px auto 12px;
+	text: center;
+}
+.password-tip span {
+	line-height: 15px;
+}
+
+.mail-link {
+	word-wrap: break-word;
+	color: #4995c4;
+	ont-weight: normal;
+	text-decoration: none;
+}
+
+.trade-content {
+	width: 100%;
+	min-height: 50px;
+	border: 1px solid #dcdcdc;
+	background-color: #fff;
+	margin: 10px 0;
+	padding: 0;
+}
+
+.trade-info {
+	padding: 10px;
+	width: 960px;
+	float: left;
+}
+
+#wrap {
+
+	width: 760px;
+	height: 115px;
+	padding: 0;
+	/*float: left;*/
+	-webkit-transition:0.5s all;
+	-moz-transition:0.5s all;
+	/* more transition here */
+}
+
+#wrap:hover {
+	width: 1520px;
+	height: 230px;
+}
+
+.quarter {
+	padding: 0;
+	-webkit-transform: scale(0.5);
+	-moz-transform: scale(0.5);
+	-o-transform: scale(0.5);
+	transform: scale(0.5);
+
+	width: 1520px;
+	height: 230px;
+	-webkit-transform-origin: left top;
+	-webkit-transition: 0.5s all;
+	-moz-transition: 0.5s all;
+	/* more transition here */
+}
+
+
+#wrap:hover .quarter {
+	-webkit-transform: scale(1);
+	-moz-transform: scale(1);
+	-o-transform: scale(1);
+	transform: scale(1);
+	-webkit-transform-origin: left top;
+	-moz-transform-origin: left top;
+	/* more transform-origin */
+}
+
+
+
+table.arb_trade tbody tr.tab_btn td {
+	background:#efefef;
+	border: solid #e5e5e5;
+	border-width: 1px 0 1px 1px;
+}
+table.arb_trade tbody tr.tab_btn td:hover {
+	cursor:pointer;
+	background:#9aa8b9;
+	border: solid #e5e5e5;
+	border-width: 0 0 1px 1px;
+}
+table.arb_trade tbody tr.tab_btn td.active {
+	color:#444;
+	background:#fff;
+	border: solid #fff;
+	border-width: 1px 0 1px 1px;
+}
+
+
+.upload-title {
+	margin: -20px 0 0;
+	color: #444;
+}

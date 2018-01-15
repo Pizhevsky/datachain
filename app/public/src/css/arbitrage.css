@@ -1,0 +1,146 @@
+.left_tabs {
+	font-size: 18px;
+	line-height: 18px;
+	padding: 15px 0 15px 10px;
+	color: #444;
+}
+
+.arb_exchanges {
+
+}
+
+.arb_exchanges th {
+	color: #b2b2b2;
+	font-size: 11px;
+	text-align: center;
+	padding: 6px 0;
+}
+
+.arb_exchanges tr {
+	background-color: #f5f5f5;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.arb_exchanges tr td  {
+	padding: 10px;
+	text-align: center;
+}
+
+.arb_trade {
+
+}
+
+.arb_trade input,
+.arb_trade select {
+	border: 1px solid #e5e5e5;
+	margin-bottom: 5px;
+}
+
+.arb_trade th {
+	height: 30px;
+}
+
+.arb_trade tr {
+	background-color: #fff;
+	border-bottom: 1px solid #fff;
+}
+
+.arb_trade tr td  {
+	padding: 5px;
+	text-align: center;
+}
+
+.arb_orders th {
+	color: #666;
+	font-size: 11px;
+	text-align: center;
+	padding: 6px 0;
+}
+
+.arb_orders tr {
+	background-color: #fff;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.arb_orders tr td {
+	padding: 10px;
+	text-align: center;
+}
+
+.arb_exchanges table tbody td .green {
+	color:#25b02b;
+}
+.arb_exchanges table tbody td .red {
+	color:#ff0000;
+}
+
+.arb_exchanges .best_line {
+	background-color: #99ff99;
+}
+
+.profile_table,
+.grades_table {
+	width: 90%;
+}
+
+.profile_table th {
+	color: #666;
+	font-size: 11px;
+	text-align: center;
+	padding: 6px 0;
+}
+
+.profile_table tbody tr {
+	background-color: #fff;
+}
+
+.profile_table tbody tr:last-child {
+	background-color: #fff;
+	border-bottom: 1px solid #e5e5e5;
+}
+
+.profile_table .td_content {
+	padding: 5px 10px 3px;
+}
+
+.profile_table .collapse_container {
+	width: 100%;
+	border-top: 1px solid #e5e5e5;
+	padding: 10px 10px 25px;
+}
+
+.profile_table .btn {
+	cursor: pointer;
+}
+
+
+.grades_table tr {
+	background-color: #eee;
+}
+.grades_table tr:nth-child(odd) {
+	background-color: #fff;
+}
+.grades_table tr td,
+.grades_table tr th {
+	border: solid #e5e5e5;
+	border-width: 0 1px;
+	padding: 10px;
+}
+
+.inner_table {
+	width: 100%;
+}
+.inner_table tbody tr:last-child {
+	background-color: #fff;
+	border: none;
+}
+.inner_table tr td,
+.inner_table tr th {
+	border: solid #e5e5e5;
+	border-width: 0 1px 0 0;
+	padding: 5px, 10px;
+}
+.inner_table tr td:last-child,
+.inner_table tr th:last-child {
+	border: none;
+}

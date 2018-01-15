@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Chain test</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script>
+	<script>
+
+		$(document).ready(function() {
+			var container = $('#first_scene__data'),
+				d = parseInt(new Date().getTime() / 1000);
+				//d = getDate();
+
+			$.ajax('https://dm.fly7.ru/manbtc/hs/chains/best/'+d) // 'https://dm.fly7.ru/manbtc/hs/chains/last/'+d+'?n=1'
+				.done(function (response) {
+					console.log(response);
+					onLoad(response, container);
+				});
+		});
+
+		function onLoad (data, element) {
+			let style = {
+				text12: {
+					'font-family': 'Arial',
+					'font-size': '12px',
+					'fill': '#fff'
+				},
+				text14: {
+					'font-family': 'Arial',
+					'font-size': '14px',
+					'fill': '#fff'
+				},
+				text22: {
+					'font-family': 'Arial',
+					'font-size': '22px',
+					'font-weight': 'bold',
+					'fill': '#fff'
+				},
+				thickness: {
+					'stroke': '#fff',
+					'stroke-width': '1.5',
+					'stroke-opacity': '1',
+					'stroke-linejoin': 'round'
+				}
+			};
+			let r = 40; // circle radius
+			let ap = 10; // arrow padding
+			let al = 100; // arrow length
+			let ep = 20; // exchange padding
+			let tl = 60; // text length
+			let chainWidth = al + 2*ap + 2*r; // between centers of circles
+			let width = 1160;
+			let height = 230;
+			let paper;
+
+			console.log('watch chain data:', data);
+			var value = data.Orders;
+			if (value && value.length) {
+				let padding = (width - (chainWidth * value.length + 2*r)) / 2 + 40;
+
+				element[0].innerHTML = '';
+
+				paper = Raphael(element[0], width, height);
+				//paper.canvas.style.backgroundColor = '#fff';
+				//paper.canvas.style.border = '1px solid #dcdcdc';
+				paper.canvas.style.shapeRendering = 'geometricprecision';
+				for (let i = 0; i < value.length; i++) {
+					drawChain(i * chainWidth + padding, height/2 - 20, value[i], i);
+				}
+
+				paper.path(`
+					M${padding - r} ${height/2 - 20}
+					L${padding - r - 20} ${height/2 - 20}
+					L${padding - r - 20} ${height/2 + 2*ep + 30}
+					L${value.length * chainWidth + padding + r + 20} ${height/2 + 2*ep + 30}
+					L${value.length * chainWidth + padding + r + 20} ${height/2 - 20}
+					L${value.length * chainWidth + padding + r} ${height/2 - 20}
+				`).attr(style.thickness).attr('arrow-end', 'block-wide-long');
+
+				paper.text(padding + 30, height/2 + 2*ep + 45, 'BTC In: ' + data.BTCin).attr(style.text22);
+				paper.text(value.length * chainWidth + padding - 35, height/2 + r + 45, 'BTC Out: ' + data.BTCout).attr(style.text22);
+				paper.text(padding + 40, height/2 - r - 40, data.Date).attr(style.text22);
+				paper.text(padding + (value.length * chainWidth)/2, height/2 + 2*ep + 45, 'Profit: ' + data.Profit + '%').attr(style.text22);
+			}
+
+			function drawChain(x, y, data, i) {
+
+				if (i == 0) {
+					drawCircle(x, y, i, data, 'Currency1');
+				}
+				drawCircle(x + chainWidth, y, i, data, 'Currency2');
+
+				paper.path(`
+					M${x+r+ap} ${y}
+					L${x+r+ap+al/2-tl/2-4} ${y}
+				`).attr(style.thickness);
+
+				paper.text(x+r+ap+al/2-2, y, data.Price).attr(style.text12);
+
+				paper.path(`
+					M${x+r+ap+al/2+tl/2} ${y}
+					L${x+r+ap+al} ${y}
+				`).attr(style.thickness).attr('arrow-end', 'block-wide-long');
+
+				let d = i % 2 ? -1 : 1;
+				paper.path(`
+					M${x} ${y+d*r}
+					L${x} ${y+d*(r+ep)}
+					L${x+2*r+2*ap+al} ${y+d*(r+ep)}
+					L${x+2*r+2*ap+al} ${y+d*r}
+				`).attr(style.thickness);
+
+				paper.text(x+r+ap+al/2, y+d*(r+ep+10), data.Exchange).attr(style.text14);
+			}
+
+			function drawCircle(x, y, i, data, name) {
+				paper.circle(x, y, r).attr(style.thickness);
+				paper.text(x, y, data[name]).attr(style.text14);
+			}
+
+		}
+
+		function getDate() {
+			var date = new Date(),
+				str = [
+					date.getUTCFullYear(),
+					date.getUTCMonth() + 1,
+					date.getUTCDate()
+				].map(item => {
+					return item < 10 ? `0${item}` : item;
+				}).join('');
+
+			return str;
+		}
+	</script>
+</head>
+<body style="background-color: #999;">
+	<div id="first_scene__data"></div>
+</body>
+</html>

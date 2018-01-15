@@ -1,0 +1,38 @@
+<!DOCTYPE>
+<html>
+<head>
+	<title>ICO countdown</title>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script src="/src/jQClock/js/jquery.countdown.js"></script>
+	<link href="/src/jQClock/css/media.css" rel="stylesheet" type="text/css" />
+	<script>
+		var now = new Date(),
+				offset = now.getTimezoneOffset(),
+				end = new Date('2017-12-07'),
+				timer = new Date(end.getTime() + offset*60*1000);
+		$(function(){
+			$(".digits").countdown({
+				image: "/src/jQClock/img/digits.png",
+				format: "dd:hh:mm:ss",
+				endTime: timer
+			});
+		});
+	</script>
+</head>
+<body>
+<div class="wrapper">
+	<div class="title">
+		ICO left
+	</div>
+	<div class="holder clearfix">
+		<div class="digits"></div>
+	</div>
+	<div class="subtitle">
+		<span style="margin-left: 45px;">Days</span>
+		<span style="margin-left: 105px;">Hours</span>
+		<span style="margin-left: 87px;">Minutes</span>
+		<span style="margin-left: 73px;">Seconds</span>
+	</div>
+</div>
+</body>
+</html>

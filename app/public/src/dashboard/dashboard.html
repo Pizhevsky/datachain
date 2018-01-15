@@ -1,0 +1,1399 @@
+<!DOCTYPE html>
+<html ng-app="dashboardApp">
+<head>
+	<title>Arbidex</title>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+	<link rel="shortcut icon" href="/img/favicon.ico" type="image/x-icon">
+
+	<!--link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css"-->
+	<link href="/src/css/glyph.css" rel="stylesheet" type="text/css">
+	<link href="/external/css/bootstrap.css" rel="stylesheet" type="text/css">
+	<link href="/external/css/angular-datepicker.css" rel="stylesheet" type="text/css">
+	<link href="/external/css/perfect-scrollbar.css" rel="stylesheet" type="text/css">
+
+	<link href="/src/css/style.css" rel="stylesheet" type="text/css">
+	<link href="/src/css/main.css" rel="stylesheet" type="text/css">
+	<link href="/src/css/trade.css" rel="stylesheet" type="text/css">
+	<link href="/src/css/arbitrage.css" rel="stylesheet" type="text/css">
+
+	<script src="/external/js/angular.min.js" type="text/javascript"></script>
+	<script src="/external/js/angular-sanitize.min.js" type="text/javascript"></script>
+	<script src="/external/js/jquery.js" type="text/javascript"></script>
+	<script src="/external/js/perfect-scrollbar.min.js" type="text/javascript"></script>
+	<script src="/external/js/raphael.min.js" type="text/javascript"></script>
+	<script src="/external/js/angular-datepicker.js" type="text/javascript"></script>
+	<script src="/external/js/popper.js" type="text/javascript"></script>
+	<script src="/external/js/bootstrap.min.js" type="text/javascript"></script>
+
+	<script src="/src/dashboard/dashboard.js" type="text/javascript"></script>
+	<script src="/src/dashboard/ajaxService.js" type="text/javascript"></script>
+	<script src="/src/dashboard/exchanges.js" type="text/javascript"></script>
+	<script src="/src/dashboard/starter.js" type="text/javascript"></script>
+	<script src="/src/dashboard/pages.js" type="text/javascript"></script>
+	<script src="/src/dashboard/profile.js" type="text/javascript"></script>
+	<script src="/src/dashboard/trade.js" type="text/javascript"></script>
+	<script src="/src/dashboard/arbitrage.js" type="text/javascript"></script>
+	<script src="/src/dashboard/chains.js" type="text/javascript"></script>
+</head>
+<body ng-controller="pagesController">
+<header>
+	<nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+		<a class="navbar-brand" href="/">
+			<div class="logo"></div>
+		</a>
+		<button class="navbar-toggler d-lg-none" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+			<span class="navbar-toggler-icon"></span>
+		</button>
+
+		<div class="collapse navbar-collapse" id="navbarsExampleDefault">
+			<ul class="navbar-nav mr-auto">
+				<li class="nav-item {{currentPage == 'profile' ? 'active' : ''}}">
+					<a class="nav-link" href="#" ng-click="changePage('profile');">Profile</a>
+				</li>
+				<li class="nav-item {{currentPage == 'trade' ? 'active' : ''}}">
+					<a class="nav-link" href="#" ng-click="changePage('trade');">Trade</a>
+				</li>
+				<li class="nav-item {{currentPage == 'arbitrage' ? 'active' : ''}}">
+					<a class="nav-link" href="#" ng-click="changePage('arbitrage');">SWT</a>
+				</li>
+				<li class="nav-item {{currentPage == 'chains' ? 'active' : ''}}">
+					<a class="nav-link" href="#" ng-click="changePage('chains');">Chains</a>
+				</li>
+				<li class="nav-item {{currentPage == 'chains' ? 'active' : ''}}">
+					<a class="nav-link" href="#" ng-click="changePage('instruction');">Instruction</a>
+				</li>
+			</ul>
+			<span style="color: #fff; margin: 0 20px;">Arbidex MVP is in DEMO mode. Please, don’t deposit more than 0.1 BTC</span>
+			<div class="form-inline mt-2 mt-md-0">
+				<a class="btn btn-outline-success my-2 my-sm-0" href="/logout">Logout</a>
+			</div>
+		</div>
+	</nav>
+</header>
+
+<div class="container-fluid clearfix" style="display:none; text-align: center;" ng-controller="chainsController" ng-show="currentPage == 'instruction'">
+	<!--iframe src="/doc/Instruction_ENG.pdf" style="width: 400px; height: 600px;" border="0"></iframe-->
+	<iframe src="https://drive.google.com/file/d/1fvwTTa-z1iPaNm2gHvukJlXGVwYNbnMa/preview" style="width: 800px; height: 960px; margin: 20px auto;"></iframe>
+</div>
+
+<div class="container-fluid clearfix" style="display:none;" ng-controller="chainsController" ng-show="currentPage == 'chains'">
+	<nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+		<div ng-repeat="item in buttons" style="margin-top: 20px;">
+			<button class="btn btn-lg btn-primary btn-block"
+			        style="cursor: pointer; margin: 0 auto 10px; width: 70%; font-size: 14px; font-weight: bold;"
+			        ng-click="getData(item);">
+					{{item.text}}
+			</button>
+		</div>
+	</nav>
+	<main role="main" class="col-sm-9 ml-sm-auto col-md-10 pt-3">
+		<div style="overflow-y: scroll; height: 1900px;">
+			<div class="alert alert-danger" role="alert" ng-if="jsonError.length">
+				<span>{{jsonError}}</span>
+			</div>
+			<div style="color: #999; font-size: 34px; font-weight: bold;" ng-show="isLoading">Loading...</div>
+
+			<div class="clearfix"  ng-show="svgShow">
+				<div ng-repeat="item in dataList">
+					<div id="wrap">
+						<div class="quarter">
+							<draw-chain scheme-data="item.Orders" extra="item" ng-click="onClickScheme();"></draw-chain>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="clearfix" style="margin-top: 20px;" ng-show="tableShow">
+				<table class="arb_orders" width="90%">
+					<thead>
+						<tr>
+							<th width="20%">Date</th>
+							<th width="40%">Chain</th>
+							<th width="10%">BTC In</th>
+							<th width="10%">BTC Out</th>
+							<th width="20%">Profit %</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr style="font-weight:bold;">
+							<td width="20%" class="first"></td>
+							<td width="40%">Total count: {{Total.Count}}</td>
+							<td width="10%">{{Total.BTCinTotal}}</td>
+							<td width="10%">{{Total.BTCoutTotal}}</td>
+							<td width="20%">{{Total.ProfitBTC}} BTC ({{Total.Profit}})</td>
+						</tr>
+						<tr ng-repeat="item in dataTable">
+							<td width="20%" class="first">{{item.Date}}</td>
+							<td width="40%">{{item.Name}}</td>
+							<td width="10%">{{item.BTCin}}</td>
+							<td width="10%">{{item.BTCout}}</td>
+							<td width="20%">{{item.Profit}}</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="clear"></div>
+			</div>
+		</div>
+		<!--div class="trade-content" style="margin: 20px auto; width: 1520px;" ng-bind-html="click.content"></div-->
+	</main>
+</div>
+
+<div class="container-fluid clearfix" style="display: none;" ng-controller="tradeController" ng-show="currentPage == 'trade'">
+	<!--div class="trade-content clearfix">
+		<iframe src="/src/charts/bitfinexTicker.html"></iframe>
+	</div-->
+	<div class="alert alert-danger" role="alert" ng-if="errorMessage.length">
+		<span>{{errorMessage}}</span>
+	</div>
+	<div class="trade-content clearfix" ng-show="!!model && model.exchanges.length">
+		<div class="left_bar">
+			<div class="exchange_box">
+				<div class="all_title title">Exchange</div>
+				<div class="result">
+					<table class="marketes" width="100%">
+						<thead>
+						<tr>
+							<th class="first" width="100%">Name</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="scrolling" id="scrollbar7">
+					<div id="market_base_list" >
+						<table id="trade_market" class="marketes dataTable no-footer" width="100%">
+							<thead style="display:none;">
+								<tr role="row">
+									<th class="sorting_disabled" rowspan="1" colspan="1" style="width: 0px;" width="100%">
+										Name
+									</th>
+								</tr>
+							</thead>
+							<tbody>
+								<tr class="even" ng-repeat="name in model.exchanges">
+									<td class="first {{name == model.exchange ? 'active' : ''}}" ng-click="changeExchange(name)">
+										{{name}}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<div class="clear"></div>
+					</div>
+				</div>
+			</div>
+			<div class="market_box">
+				<div class="search_box_trade">
+					<div id="trade_market_filter" class="dataTables_filter">
+						<label>
+							<input id="coinfilter" class="" type="search" placeholder="Search" value="" ng-model="marketSearch">
+						</label>
+					</div>
+				</div>
+				<div class="all_title title">Markets</div>
+				<div class="result">
+					<table class="marketes" width="100%">
+						<thead>
+						<tr>
+							<th width="100%" class="first">Name</th>
+						</tr>
+						</thead>
+					</table>
+				</div>
+				<div class="scrolling" id="scrollbar2">
+					<div class="loader_text" ng-if="!model.pairs.length">Loading...</div>
+					<div id="trade_market_wrapper" class="dataTables_wrapper no-footer">
+						<table id="trade_market" class="marketes dataTable no-footer" width="100%">
+							<tbody>
+								<tr class="even" ng-repeat="item in markets">
+									<td width="100%" class="first {{item.name == model.pair.name ? 'active' : ''}}" ng-click="changePair(item)">
+										{{item.name}}
+									</td>
+								</tr>
+							</tbody>
+						</table>
+						<div class="clear"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="center_box" id="data-pjax-container">
+			<div class="top_center">
+				<ul class="top_center_list">
+					<li class="c_1">{{model.pair.currency1}} <span>-</span> {{model.pair.currency2}}</li>
+					<li class="c_2">Last: <span class="animr label-type2" id="label_last">{{tickerData.last}}</span></li>
+					<li class="c_3">24High: <span id="label_high24" class="animr">{{tickerData.high}}</span></li>
+					<li class="c_4">24Low: <span id="label_low24" class="animr">{{tickerData.low}}</span></li>
+					<li class="c_5">24V: <span id="label_vol24" class="animr">{{tickerData.volume}} {{model.pair.currency1}}</span></li>
+				</ul>
+			</div>
+			<div class="col_1">
+				<div class="buy_box fild_box">
+					<div class="inset clBuyForm">
+						<input name="order_type" value="1" type="hidden">
+						<input name="fee_type" value="1" type="hidden">
+						<!--div class="meta">
+							<div class="all_title title">BUY</div>
+							<div class="sm" id="label_bestbuy">{{tickerData.ask}}</div>
+						</div-->
+						<div class="line_first">
+							<span class="c1">Balance:</span>
+							<span href="javascript:void(0)" class="c2 clBuyBalance">
+								<span id="label_buy_balance">
+									{{model.pair.wallet2.available || 0}}
+								</span> {{model.pair.currency2}}</span>
+						</div>
+						<div class="line"><span>Amount:</span><div class="poles">
+							<input name="amount" maxlength="25" type="text" ng-model="model.buy.amount">
+							<span class="currency">{{model.pair.currency1}}</span>
+						</div></div>
+						<div class="line"><span>Price:</span><div class="poles">
+							<input name="price" maxlength="25" type="text" ng-model="model.buy.price">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<div class="line"><span>Result:</span><div class="poles">
+							<input name="total" maxlength="25" type="text" ng-model="model.buy.result">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<div class="line"><span>Fee ({{model.buy.fee}}%):</span><div class="poles">
+							<input name="fee" maxlength="25" disabled="" type="text" value="{{model.buy.result * model.buy.fee / 100}}">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<div class="line"><span>Total:</span><div class="poles">
+							<input name="totalfee" maxlength="25" disabled="" type="text" value="{{model.buy.result * (1 + model.buy.fee / 100)}}">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<input class="clCreateOrder" origin="Buy" value="Buy" type="button" ng-click="buy();">
+					</div>
+				</div>
+				<div class="sell_orders_box">
+					<div class="all_title title">Sell order</div>
+					<div class="result">
+						<table class="sell_orders" width="100%">
+							<thead>
+							<tr>
+								<th class="first" width="35%">Price</th>
+								<th width="38%">{{model.pair.currency1}}</th>
+								<th width="27%">{{model.pair.currency2}}</th>
+							</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="loader_text" ng-if="!orderBook.asks.length">Loading...</div>
+					<div class="scrolling" id="scrollbar3">
+						<table class="sell_orders" width="100%">
+							<tbody id="sellord_table">
+								<tr class="clRow" ng-repeat="item in orderBook.asks">
+									<td class="first" width="35%">{{item.price}}</td>
+									<td width="38%">{{item.amount.toFixed(8)}}</td>
+									<td width="27%">{{(item.price*item.amount).toFixed(8)}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="col_2">
+				<div class="sell_box fild_box">
+					<div class="inset clSellForm" style="position:relative;">
+						<input name="order_type" value="2" type="hidden">
+						<input name="fee_type" value="2" type="hidden">
+						<!--div class="meta">
+							<div class="all_title title">SELL</div>
+							<div class="sm" id="label_bestsell">{{tickerData.bid}}</div>
+						</div-->
+						<div class="line_first">
+							<span class="c1">Balance:</span>
+							<span href="javascript:void(0)" class="c2 clSellBalance">
+								<span id="label_sell_balance">
+									{{model.pair.wallet1.available || 0}}
+								</span> {{model.pair.currency1}}
+							</span>
+						</div>
+						<div class="line"><span>Amount:</span><div class="poles">
+							<input name="amount" maxlength="25" type="text" ng-model="model.sell.amount">
+							<span class="currency">{{model.pair.currency1}}</span>
+						</div></div>
+						<div class="line"><span>Price:</span><div class="poles">
+							<input name="price" maxlength="25" type="text" ng-model="model.sell.price">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<div class="line"><span>Result:</span><div class="poles">
+							<input name="total" maxlength="25" type="text" ng-model="model.sell.result">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<div class="line"><span>Fee ({{model.sell.fee}}%):</span><div class="poles">
+							<input name="fee" maxlength="25" disabled="" type="text" value="{{model.sell.result * model.sell.fee / 100}}">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<div class="line"><span>Total:</span><div class="poles">
+							<input name="totalfee" maxlength="25" disabled="" type="text" value="{{model.sell.result * (1 - model.sell.fee / 100)}}">
+							<span class="currency">{{model.pair.currency2}}</span>
+						</div></div>
+						<input class="clCreateOrder" origin="Sell" value="Sell" type="button" ng-click="sell();">
+					</div>
+				</div>
+				<div class="buy_orders_box">
+					<div class="all_title title">Buy order</div>
+					<div class="result">
+						<table class="sell_orders" width="100%">
+							<thead>
+							<tr>
+								<th class="first" width="35%">Price</th>
+								<th width="38%">{{model.pair.currency1}}</th>
+								<th width="27%">{{model.pair.currency2}}</th>
+							</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="loader_text" ng-if="!orderBook.bids.length">Loading...</div>
+					<div class="scrolling" id="scrollbar4">
+						<table class="sell_orders" width="100%">
+							<tbody id="buyord_table">
+								<tr class="clRow" ng-repeat="item in orderBook.bids">
+									<td class="first" width="35%">{{item.price}}</td>
+									<td width="38%">{{item.amount.toFixed(8)}}</td>
+									<td width="27%">{{(item.price*item.amount).toFixed(8)}}</td>
+								</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="right_bar">
+			<div class="col_3">
+				<div class="trade_history" id="thc">
+					<div class="all_title title">Trade History</div>
+					<div class="result">
+						<table class="trade_history_table" width="100%">
+							<thead>
+							<tr>
+								<th class="first" width="27%">Time</th>
+								<th width="14%"></th>
+								<th width="30%">Price</th>
+								<th width="29%">{{model.pair.currency1}}</th>
+							</tr>
+							</thead>
+						</table>
+					</div>
+					<div class="loader_text" ng-if="!tradeHistory.length">Loading...</div>
+					<div class="scrolling" id="scrollbar6">
+						<table class="trade_history_table" width="100%">
+							<tbody id="microhistory_table">
+							<tr ng-repeat="item in tradeHistory">
+								<td width="27%" class="first">{{item.time}}</td>
+								<td width="14%" class="{{item.style}}">{{item.type.toUpperCase()}}</td>
+								<td width="30%" class="{{item.style}}">{{item.price.toFixed(8)}}</td>
+								<td width="29%" class="{{item.style}}">{{item.amount.toFixed(8)}}</td>
+							</tr>
+							</tbody>
+						</table>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="container-fluid clearfix" style="display: none;" ng-controller="arbitrageController" ng-show="currentPage == 'arbitrage'">
+	<div class="trade-content clearfix" style="margin: 20px auto; min-width: 960px; max-width: 1520px;">
+		<div ng-show="model.exchanges && model.exchanges.length" style="padding: 0; border-top: 1px solid #e5e5e5; width: 100%; height: 320px; border: solid #e5e5e5; border-width: 0 0 1px 0;">
+			<!--div class="col_1" style="width: 60%; height: 320px; border: solid #e5e5e5; border-width: 1px 0 1px 0;"></div-->
+			<iframe id="orderBookChart" src="/src/charts/orderBook.html" data-charts="{{bookChart}}" data-exchanges="{{model.exchanges || []}}" width="100%" height="100%" scrolling="no" border="0">
+				Chart
+			</iframe>
+		</div>
+		<div class="clearfix" style="padding: 0; width: 100%; height: 320px">
+			<div class="col_1" style="border-right: 1px solid #e5e5e5; height: 320px; width: 30%;">
+				<div id="market_base_list" >
+					<table id="trade_market" class="arb_trade" width="100%">
+						<!--thead>
+							<tr>
+								<th width="100%">&nbsp;</th>
+							</tr>
+						</thead-->
+						<tbody>
+							<tr class="tab_btn">
+								<td width="50%" class="first {{action == 'buy' ? 'active' : ''}}" ng-click="changeAction('buy')">
+									<div class="left_tabs">Buy</div>
+								</td>
+								<td width="50%" class="first {{action == 'sell' ? 'active' : ''}}" ng-click="changeAction('sell')">
+									<div class="left_tabs">Sell</div>
+								</td>
+							</tr>
+							<tr width="100%">
+								<td colspan="2">
+									<select ng-model="currency" style="width: 50%; height: 30px; margin-top:5px;">
+										<option>BTC</option>
+										<option>USD</option>
+									</select>
+									<input name="amount" maxlength="25" type="number" style="width: 50%; height: 30px" ng-model="model.order.amount">
+								</td>
+							</tr>
+							<!--tr width="100%">
+								<td>
+
+								</td>
+							</tr-->
+							<tr width="100%">
+								<td colspan="2">
+									<div>Limit:</div>
+									<input name="price" maxlength="25" type="text" style="width: 50%; height: 30px;" ng-model="model.order.price">
+								</td>
+							</tr>
+							<!--tr width="100%">
+								<td>
+									<input name="price" maxlength="25" type="text" style="height: 30px" ng-model="model.order.price">
+								</td>
+							</tr-->
+							<tr width="100%">
+								<td colspan="2">
+									<button class="btn btn-warning btn-block" value="Mix" style="margin: 0 auto 20px; padding: 5px 10px; width: 50%;" ng-click="mix();">
+										Mix {{action}} price: {{mixPrice}}
+									</button>
+									<div class="alert alert-danger" role="alert" ng-if="errorMessage.length">
+										<span>{{errorMessage}}</span>
+									</div>
+								</td>
+							</tr>
+							<!--tr width="100%">
+								<td>
+									<div class="alert alert-danger" role="alert" ng-if="errorMessage.length">
+										<span>{{errorMessage}}</span>
+									</div>
+								</td>
+							</tr-->
+						</tbody>
+					</table>
+				</div>
+			</div>
+			<div class="col_2" style="width: 70%;">
+				<div id="market_base_list" >
+					<table id="trade_market" class="arb_exchanges" width="100%">
+						<thead>
+							<tr>
+								<th width="13%" class="first">Name</th>
+								<th width="13%" class="first">Action</th>
+								<th width="13%" class="first">Last</th>
+								<th width="13%" class="first">by OrderBook</th>
+								<th width="13%" class="first">Diff</th>
+								<th width="13%" class="first">Balance ({{action == 'buy' ? 'USD' : 'BTC'}})</th>
+								<!--th width="13%" class="first">Fee</th-->
+								<th width="22%" class="first">
+									<span ng-show="action == 'buy' && currency == 'BTC'">To spent (USD)</span>
+									<span ng-show="action == 'buy' && currency == 'USD'">Will recieve (BTC)</span>
+									<span ng-show="action == 'sell' && currency == 'BTC'">Will recieve (USD)</span>
+									<span ng-show="action == 'sell' && currency == 'USD'">To spent (BTC)</span>
+								</th>
+							</tr>
+						</thead>
+						<tbody ng-repeat="item in model.exchanges">
+							<tr class="{{ action == 'buy' ? (item.buyDiff ? '' : 'best_line') : (item.sellDiff ? '' : 'best_line') }}">
+								<td>
+									{{item.name}}
+								</td>
+								<td>
+									<div ng-show="isSending" style="color: #ababab; padding: 5px 0;">
+										Sending...
+									</div>
+									<div class="buy_box fild_box" style="border: 0; padding: 0;" ng-show="action == 'buy' && !isSending">
+										<input class="clCreateOrder"value="Buy" ng-click="buy(item);" type="button">
+									</div>
+									<div class="sell_box fild_box" style="border: 0; padding: 0;" ng-show="action == 'sell' && !isSending">
+										<input class="clCreateOrder" value="Sell" ng-click="sell(item);" type="button">
+									</div>
+								</td>
+								<td>
+									{{item.tickerLast}}
+								</td>
+								<td>
+									{{item.priceByOrderBook}}
+								</td>
+								<td class="red">
+									<span ng-show="action == 'buy' && item.buyDiff">
+										<span ng-show="item.buyDiff > 0"}>+</span>{{item.buyDiff}}%
+									</span>
+									<span ng-show="action == 'sell' && item.sellDiff">
+										<span ng-show="item.sellDiff > 0"}>+</span>{{item.sellDiff}}%
+									</span>
+								</td>
+								<td>
+									<div ng-show="action == 'buy'">
+										{{item.balances['USD'].available}}
+									</div>
+									<div ng-show="action == 'sell'">
+										{{item.balances['BTC'].available}}
+									</div>
+								</td>
+								<!--td>
+									{{item.fees.taker}}%
+								</td-->
+								<td>
+									{{item.priceFeeRound}}
+								</td>
+							</tr>
+						</tbody>
+						<tbody ng-if="!isExchangesLoaded">
+							<tr style="background-color: #fff; text-align: center;">
+								<td width="100%" colspan="7">
+									<div style="color:#c5c5c5; font-weight: bold; font-size: 22px;">{{exchangeLoading}} loading...</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="clear"></div>
+				</div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clearfix" style="padding: 0; border-top: 1px solid #e5e5e5; width: 100%;">
+			<div class="clearfix" style="width: 100%; height: 370px; border: solid #e5e5e5; border-width: 0 0 1px 1px;">
+				<div class="all_title title" style="margin:0;">Closed Orders <span ng-show="isOrdersUpdating">(Updating...)</span></div>
+				<table id="trade_market" class="arb_orders" width="100%">
+					<thead>
+						<tr>
+							<th width="20%" class="first">Time</th>
+							<th width="10%" class="first">Exchage</th>
+							<th width="10%" class="first">Action</th>
+							<th width="20%" class="first">Amount</th>
+							<th width="20%" class="first">Fee</th>
+							<th width="20%" class="first">Price</th>
+						</tr>
+					</thead>
+				</table>
+
+				<div id="arbScrollbar" class="scrolling" style="height: 290px;">
+					<table id="trade_market" class="arb_orders" width="100%">
+						<tbody>
+							<tr ng-repeat="item in model.orders">
+								<td width="20%">
+									{{item.time}}
+								</td>
+								<td width="10%">
+									{{item.exchange}}
+								</td>
+								<td width="10%">
+									<span class="{{item.side.toLowerCase() == 'buy' ? 'green' : 'red'}}">
+										{{item.side.toUpperCase()}}
+									</span>
+								</td>
+								<td width="20%">
+									{{item.amount}}
+								</td>
+								<td width="20%">
+									{{item.fee.amount}}
+								</td>
+								<td width="20%">
+									<div ng-show="action == 'buy'">
+										{{item.price}}
+									</div>
+									<div ng-show="action == 'sell'">
+										{{item.price}}
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="clear"></div>
+				</div>
+				<div class="clear"></div>
+			</div>
+			<div class="clear"></div>
+		</div>
+		<div class="clear"></div>
+	</div>
+	<div class="clear"></div>
+</div>
+
+<div class="container-fluid" style="display:none;" ng-controller="profileController" ng-show="currentPage == 'profile'">
+	<div class="row j-profile">
+		<nav class="col-sm-3 col-md-2 d-none d-sm-block bg-light sidebar">
+			<ul class="nav nav-pills flex-column">
+				<li class="nav-item">
+					<a class="nav-link {{currentTab == 'account' ? 'active' : ''}}" href="#" ng-click="changeTab('account');">Account</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link {{currentTab == 'documents' ? 'active' : ''}}" href="#" ng-click="changeTab('documents');">Verification</a>
+				</li>
+				<li class="nav-item">
+					<a class="nav-link {{currentTab == 'security' ? 'active' : ''}}" href="#" ng-click="changeTab('security');">Security</a>
+				</li>
+			</ul>
+		</nav>
+
+		<main role="main" class="col-sm-9 ml-sm-auto col-md-10 pt-3">
+			<div ng-if="currentTab == 'account'">
+				<h2>Your balances:</h2>
+				<section class="row text-center placeholders-1 section-body" ng-controller="walletController">
+					<table class="profile_table">
+						<thead>
+							<tr>
+								<th width="20%">Currency</th>
+								<th width="10%"></th>
+								<th width="20%">Balance</th>
+								<th width="10%"></th>
+								<th width="20%">Arbitrage</th>
+								<th width="15%"></th>
+								<th width="15%"></th>
+							</tr>
+						</thead>
+						<tbody ng-repeat="item in wallets">
+							<tr ng-if="item.currency != 'ABX'">
+								<td class="first">
+									<div class="td_content">
+										{{item.currency}}
+									</div>
+								</td>
+								<td>
+									<div style="width: 30px; margin: 3px auto 0;">
+										<a style="font-size:22px; line-height: 15px;" ng-click="hideCollapsed()" data-toggle="collapse" href="#{{item.currency}}_balance_address">
+											<span class="glyphicon glyphicon-plus-sign"></span>
+										</a>
+										<a style="font-size:22px; line-height: 15px;" ng-click="hideCollapsed()" data-toggle="collapse" href="#{{item.currency}}_balance_withdraw">
+											<span class="glyphicon glyphicon-minus-sign"></span>
+										</a>
+									</div>
+								</td>
+								<td>
+									<div class="td_content">
+										{{item.balance}}
+									</div>
+								</td>
+								<td>
+									<div style="width: 30px;; margin: 3px auto 0;" ng-show="item.currency != 'ABX'">
+										<a style="font-size:22px; line-height: 15px;" ng-click="hideCollapsed()" data-toggle="collapse" href="#{{item.currency}}_arbitrage_add">
+											<span class="glyphicon glyphicon-circle-arrow-right"></span>
+										</a>
+										<a style="font-size:22px; line-height: 15px;" ng-click="hideCollapsed()" data-toggle="collapse" href="#{{item.currency}}_arbitrage_get">
+											<span class="glyphicon glyphicon-circle-arrow-left"></span>
+										</a>
+									</div>
+									<div style="width: 30px;; margin: 3px auto 0;" ng-show="item.currency == 'ABX'">-</div>
+								</td>
+								<td>
+									<div class="td_content" ng-show="item.currency != 'ABX'">
+										{{item.arbitrage}}
+									</div>
+									<div style="width: 30px;; margin: 3px auto 0;" ng-show="item.currency == 'ABX'">-</div>
+									<div ng-if="item.isChanging">
+										<input name="amount" maxlength="25" type="number" autofocus style="width: 80%; height: 30px; border: 1px solid #e5e5e5;" ng-model="item.arbitrage">
+									</div>
+								</td>
+								<td>
+									<div class="td_content" ng-show="item.currency != 'ABX'">
+										<button class="btn btn-primary btn-block" ng-click="hideCollapsed()" data-toggle="collapse" data-target="#{{item.currency}}_arbitrage_profit">
+											Profit
+										</button>
+									<!--
+									<div ng-if="!item.isChanging">
+										<button class="btn btn-primary btn-block" ng-click="changeArbitrageView(item)">Change</button>
+									</div>
+									<div ng-if="item.isChanging">
+										<button class="btn btn-primary btn-block" ng-click="changeArbitrage(item)">Confirm</button-->
+									</div>
+									<div style="width: 30px;; margin: 3px auto 0;" ng-show="item.currency == 'ABX'">-</div>
+								</td>
+								<td>
+									<div class="td_content">
+										<button class="btn btn-primary btn-block" ng-click="hideCollapsed()" data-toggle="collapse" data-target="#{{item.currency}}_history">
+											History
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr ng-if="item.currency == 'ABX'">
+								<td class="first">
+									<div class="td_content">
+										{{item.currency}}
+									</div>
+								</td>
+								<td>
+									<div style="margin: 11px auto;">
+										<button class="btn btn-primary btn-block" ng-click="hideCollapsed()" data-toggle="collapse" data-target="#buy_token">
+											Buy token
+										</button>
+									</div>
+								</td>
+								<td>
+									<div class="td_content">
+										{{item.balance}}
+									</div>
+								</td>
+								<td></td>
+								<td></td>
+								<td></td>
+								<td>
+									<div class="td_content">
+										<button class="btn btn-primary btn-block" ng-click="hideCollapsed()" data-toggle="collapse" data-target="#{{item.currency}}_history">
+											History
+										</button>
+									</div>
+								</td>
+							</tr>
+							<tr>
+								<td colspan="7">
+									<div id="buy_token" class="collapse">
+										<div class="collapse_container">
+											<div class="clearfix">
+												<div style="width: 34%; float: left; text-align: left;">
+													<span>Read and accept follow documents:</span>
+													<div class="checkbox">
+														<label><input type="checkbox" value="" style="margin: 0 10px 0 5px;">
+															<a href="https://drive.google.com/file/d/1fvwTTa-z1iPaNm2gHvukJlXGVwYNbnMa/preview" target="_blank">Document 1</a>
+														</label>
+													</div>
+													<div class="checkbox">
+														<label><input type="checkbox" value="" style="margin: 0 10px 0 5px;">
+															<a href="https://drive.google.com/file/d/1fvwTTa-z1iPaNm2gHvukJlXGVwYNbnMa/preview" target="_blank">Document 2</a>
+														</label>
+													</div>
+													<div class="checkbox">
+														<label><input type="checkbox" value="" style="margin: 0 10px 0 5px;">
+															<a href="https://drive.google.com/file/d/1fvwTTa-z1iPaNm2gHvukJlXGVwYNbnMa/preview" target="_blank">Document 3</a>
+														</label>
+													</div>
+												</div>
+
+												<div style="width: 66%; float: left; text-align: left; padding-left: 20px; border-left: 1px solid #e5e5e5;">
+													<div style="margin-bottom: 10px;">ABX address: <b>{{item.address}}</b></div>
+													<label>Amount:</label>
+													<input style="display: inline-block; width: 150px; margin: 0 10px 5px;" name="amount" type="number" class="form-control" placeholder="Amount" ng-model="token.amount"/>
+													<span>=</span>
+													<input style="display: inline-block; width: 150px; margin: 0 10px 5px;" name="price" type="number" disable class="form-control" placeholder="Price" ng-model="token.price"/>
+													<span>ETH</span>
+													<!--select ng-model="token.currency" style="width: 60px; height: 38px; margin-top:5px; border: 1px solid #ced4da; border-radius: 4px;">
+														<option>BTC</option>
+														<option>ETH</option>
+													</select-->
+													<div style="text-align: right; font-size: 12px;">(you should have enough balance)</div>
+													<button class="btn btn-primary btn-block" style="margin: 10px auto; width: 50%;">
+														Buy
+													</button>
+												</div>
+											</div>
+										</div>
+									</div>
+									<div id="{{item.currency}}_balance_address" class="collapse">
+										<div class="collapse_container">
+											<span>Arbidex MVP is in DEMO mode. Please, don’t deposit more than 0.1 {{item.currency}}</span>
+											<div>Deposit address: <b>{{item.address}}</b></div>
+										</div>
+									</div>
+									<div id="{{item.currency}}_balance_withdraw" class="collapse">
+										<div class="collapse_container" ng-if="isVerified">
+											Before you can withdraw you should be verified.
+											<br/>
+											Confirm your phone number in Security tab and fill all fields in Verification tab.
+										</div>
+										<div class="collapse_container" ng-if="!isVerified">
+											<h4>Withdraw</h4>
+											<form>
+												<label>Address:</label>
+												<input style="display: inline-block; width: 80%; margin: 0 10px 5px;" name="address" type="text" class="form-control" placeholder="Address" ng-model="withdraw.address"/>
+												<br/>
+												<label>Amount:</label>
+												<input style="display: inline-block; width: 150px; margin: 0 10px 5px;" name="amount" type="number" class="form-control" placeholder="Amount" ng-model="withdraw.amount"/>
+
+												<input style="width: 225px; margin: 0 auto;" class="btn btn-lg btn-primary btn-block" type="submit" value="Withdraw" ng-click="withdraw(item.currency);"/>
+											</form>
+										</div>
+									</div>
+									<div id="{{item.currency}}_arbitrage_add" class="collapse">
+										<div class="collapse_container">
+											<h4>Send from balance to arbitrage</h4>
+											<label>Amount:</label>
+											<input style="display: inline-block; width: 150px; margin: 0 0 5px 10px;" name="amount" type="number" class="form-control" placeholder="Amount" ng-model="withdraw.amount"/>
+
+											<input style="width: 225px; margin: 0 auto;" class="btn btn-lg btn-primary btn-block" type="submit" value="Send" ng-click="withdraw(item.currency);"/>
+											<span>You will start get profit on sended amount every day starting from the end of the next day</span>
+										</div>
+									</div>
+									<div id="{{item.currency}}_arbitrage_get" class="collapse">
+										<div class="collapse_container">
+											<h4>Withdraw from arbitrage to balance</h4>
+											<label>Amount:</label>
+											<input style="display: inline-block; width: 150px; margin: 0 0 5px 10px;" name="amount" type="number" class="form-control" placeholder="Amount" ng-model="withdraw.amount"/>
+
+											<input style="width: 225px; margin: 0 auto;" class="btn btn-lg btn-primary btn-block" type="submit" value="Send" ng-click="withdraw(item.currency);"/>
+										</div>
+									</div>
+									<div id="{{item.currency}}_arbitrage_profit" class="collapse">
+										<div class="collapse_container">
+											<h4>{{item.currency}} arbitrage profit:</h4>
+											<table class="inner_table" style="width: 70%; margin: 0 auto;">
+												<tr>
+													<th width="25%">Date</th>
+													<th width="25%">Balance</th>
+													<th width="25%">Profit</th>
+													<th width="25%">Result</th>
+												</tr>
+												<tr>
+													<td>28.12.2017</td>
+													<td>0.10000000</td>
+													<td>+0.2%</td>
+													<td>0.10020000</td>
+												</tr>
+												<tr>
+													<td>29.12.2017</td>
+													<td>0.10020000</td>
+													<td>+0.2%</td>
+													<td>0.10040040</td>
+												</tr>
+												<tr>
+													<td>30.12.2017</td>
+													<td>0.10040040</td>
+													<td>+0.2%</td>
+													<td>0.10060120</td>
+												</tr>
+											</table>
+										</div>
+									</div>
+									<div id="{{item.currency}}_history" class="collapse">
+										<div class="collapse_container">
+											<h4>{{item.currency}} balance history:</h4>
+											<table class="inner_table">
+												<tr>
+													<th width="20%">Date</th>
+													<th width="20%">Type</th>
+													<th width="20%">Source</th>
+													<th width="20%">Amount</th>
+													<th width="20%">Status</th>
+												</tr>
+												<tr>
+													<td>28.12.2017 14:48</td>
+													<td>deposit</td>
+													<td>Balance</td>
+													<td>0.1</td>
+													<td>done</td>
+												</tr>
+												<tr>
+													<td>29.12.2017 11:24</td>
+													<td>deposit</td>
+													<td>Arbitrage</td>
+													<td>0.1</td>
+													<td>done</td>
+												</tr>
+												<tr>
+													<td>29.12.2017 16:12</td>
+													<td>withdraw</td>
+													<td>Arbitrage</td>
+													<td>0.1</td>
+													<td>done</td>
+												</tr>
+												<tr>
+													<td>30.12.2017 19:56</td>
+													<td>withdraw</td>
+													<td>Balance</td>
+													<td>0.1</td>
+													<td>pending</td>
+												</tr>
+											</table>
+										</div>
+									</div>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+					<div class="panel" style="width: 70%; margin-top: 20px;" ng-if="errorMessage.length">
+						<div class="alert alert-danger" role="alert">
+							<span>{{errorMessage}}</span>
+						</div>
+					</div>
+					<div class="panel" style="width: 70%; margin-top: 20px;"ng-if="successMessage.length">
+						<div class="alert alert-success" role="alert">
+							<span>{{successMessage}}</span>
+						</div>
+					</div>
+				</section>
+				<h2>Grades:</h2>
+				<section class="row text-center placeholders-1 section-body">
+					<table class="grades_table">
+						<tr>
+							<th width="30%"></th>
+							<th width="14%">Basic</th>
+							<th width="14%">Upgraded</th>
+							<th width="14%">Silver</th>
+							<th width="14%">Gold</th>
+							<th width="14%">Ultimate</th>
+						</tr>
+						<tr>
+							<td>ABX hold</td>
+							<td>-</td>
+							<td>1000</td>
+							<td>15000</td>
+							<td>30000</td>
+							<td>80000</td>
+						</tr>
+						<tr>
+							<td>BTC arbitrage</td>
+							<td><0.1</td>
+							<td>0.1-1</td>
+							<td>1-10</td>
+							<td>10-100</td>
+							<td>100+</td>
+						</tr>
+						<tr>
+							<td>Trade limit<br/><span style="font-size: 10px;">BTC/month</span></td>
+							<td>-</td>
+							<td>50</td>
+							<td>300</td>
+							<td>1000</td>
+							<td>2000</td>
+						</tr>
+						<tr>
+							<td>Trade fee</td>
+							<td>0.18%</td>
+							<td>0.13%</td>
+							<td>0.11%</td>
+							<td>0.09%</td>
+							<td>0.05%</td>
+						</tr>
+					</table>
+				</section>
+				<h2>Your referal link:</h2>
+				<section class="row text-center placeholders-1 section-body">
+					<div style="border: 1px solid #e5e5e5; background-color: #fff; padding: 5px 10px;">
+						<a class="j-referal" href="{{User.referalLink}}">{{User.referalLink}}</a>
+						<button class="btn btn-primary" style="padding: 5px 10px;" ng-click="copyReferal()">Copy</button>
+					</div>
+				</section>
+				<h2>Your referals:</h2>
+				<section class="row text-center placeholders section-body">
+					<table class="arb_orders" width="30%">
+						<thead>
+							<tr ng-show="referals.length">
+								<th width="10%">Email</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr ng-show="!referals.length">
+								<td width="20%" class="first">You have no referals. Send someone your referal link.</td>
+							</tr>
+							<tr ng-repeat="item in referals">
+								<td width="20%" class="first">{{item.email}}</td>
+							</tr>
+						</tbody>
+					</table>
+				</section>
+			</div>
+			<div ng-if="currentTab == 'documents'">
+				<h2>Personal</h2>
+				<section class="row text-center placeholders section-body">
+					<form class="form-doc" ng-if="!isVerified">
+						<label for="firstname" class="sr-only">Firstname</label>
+						<input name="firstname" type="text" class="form-control" placeholder="First Name" ng-model="User.firstname"/>
+
+						<label for="lastname" class="sr-only">Lastname</label>
+						<input name="lastname" type="text" class="form-control" placeholder="Last Name" ng-model="User.lastname"/>
+
+						<label for="birthday" class="sr-only">Birthday</label>
+						<datepicker date-format="yyyy-MM-dd" date-set="{{User.validBirthday.toString()}}" date-set-hidden="true">
+							<input name="birthday" type="text" class="form-control" placeholder="Birthday" ng-model="User.birthday"/>
+						</datepicker>
+
+						<label for="citizen" class="sr-only">Citizenship</label>
+						<select name="citizen" class="form-control" placeholder="Citizenship" data-source="https://gist.github.com/marijn/396531" value="User.citizen" ng-model="User.citizen">
+							<option value="" selected disabled>Citizenship</option>
+							<option value="Afghanistan">Afghanistan</option>
+							<option value="Albania">Albania</option>
+							<option value="Algeria">Algeria</option>
+							<option value="American Samoa">American Samoa</option>
+							<option value="Andorra">Andorra</option>
+							<option value="Angola">Angola</option>
+							<option value="Anguilla">Anguilla</option>
+							<option value="Antarctica">Antarctica</option>
+							<option value="Antigua And Barbuda">Antigua And Barbuda</option>
+							<option value="Argentina">Argentina</option>
+							<option value="Armenia">Armenia</option>
+							<option value="Aruba">Aruba</option>
+							<option value="Australia">Australia</option>
+							<option value="Austria">Austria</option>
+							<option value="Azerbaijan">Azerbaijan</option>
+							<option value="Bahamas">Bahamas</option>
+							<option value="Bahrain">Bahrain</option>
+							<option value="Bangladesh">Bangladesh</option>
+							<option value="Barbados">Barbados</option>
+							<option value="Belarus">Belarus</option>
+							<option value="Belgium">Belgium</option>
+							<option value="Belize">Belize</option>
+							<option value="Benin">Benin</option>
+							<option value="Bermuda">Bermuda</option>
+							<option value="Bhutan">Bhutan</option>
+							<option value="Bolivia">Bolivia</option>
+							<option value="Bosnia And Herzegovina">Bosnia And Herzegovina</option>
+							<option value="Botswana">Botswana</option>
+							<option value="Bouvet Island">Bouvet Island</option>
+							<option value="Brazil">Brazil</option>
+							<option value="British Indian Ocean Territory">British Indian Ocean Territory</option>
+							<option value="Brunei Darussalam">Brunei Darussalam</option>
+							<option value="Bulgaria">Bulgaria</option>
+							<option value="Burkina Faso">Burkina Faso</option>
+							<option value="Burundi">Burundi</option>
+							<option value="Cambodia">Cambodia</option>
+							<option value="Cameroon">Cameroon</option>
+							<option value="Canada">Canada</option>
+							<option value="Cape Verde">Cape Verde</option>
+							<option value="Cayman Islands">Cayman Islands</option>
+							<option value="Central African Republic">Central African Republic</option>
+							<option value="Chad">Chad</option>
+							<option value="Chile">Chile</option>
+							<option value="China">China</option>
+							<option value="Christmas Island">Christmas Island</option>
+							<option value="Cocos (keeling) Islands">Cocos (keeling) Islands</option>
+							<option value="Colombia">Colombia</option>
+							<option value="Comoros">Comoros</option>
+							<option value="Congo">Congo</option>
+							<option value="Congo, The Democratic Republic Of The">Congo, The Democratic Republic Of The</option>
+							<option value="Cook Islands">Cook Islands</option>
+							<option value="Costa Rica">Costa Rica</option>
+							<option value="Cote D'ivoire">Cote D'ivoire</option>
+							<option value="Croatia">Croatia</option>
+							<option value="Cuba">Cuba</option>
+							<option value="Cyprus">Cyprus</option>
+							<option value="Czech Republic">Czech Republic</option>
+							<option value="Denmark">Denmark</option>
+							<option value="Djibouti">Djibouti</option>
+							<option value="Dominica">Dominica</option>
+							<option value="Dominican Republic">Dominican Republic</option>
+							<option value="East Timor">East Timor</option>
+							<option value="Ecuador">Ecuador</option>
+							<option value="Egypt">Egypt</option>
+							<option value="El Salvador">El Salvador</option>
+							<option value="Equatorial Guinea">Equatorial Guinea</option>
+							<option value="Eritrea">Eritrea</option>
+							<option value="Estonia">Estonia</option>
+							<option value="Ethiopia">Ethiopia</option>
+							<option value="Falkland Islands (malvinas)">Falkland Islands (malvinas)</option>
+							<option value="Faroe Islands">Faroe Islands</option>
+							<option value="Fiji">Fiji</option>
+							<option value="Finland">Finland</option>
+							<option value="France">France</option>
+							<option value="French Guiana">French Guiana</option>
+							<option value="French Polynesia">French Polynesia</option>
+							<option value="French Southern Territories">French Southern Territories</option>
+							<option value="Gabon">Gabon</option>
+							<option value="Gambia">Gambia</option>
+							<option value="Georgia">Georgia</option>
+							<option value="Germany">Germany</option>
+							<option value="Ghana">Ghana</option>
+							<option value="Gibraltar">Gibraltar</option>
+							<option value="Greece">Greece</option>
+							<option value="Greenland">Greenland</option>
+							<option value="Grenada">Grenada</option>
+							<option value="Guadeloupe">Guadeloupe</option>
+							<option value="Guam">Guam</option>
+							<option value="Guatemala">Guatemala</option>
+							<option value="Guinea">Guinea</option>
+							<option value="Guinea-bissau">Guinea-bissau</option>
+							<option value="Guyana">Guyana</option>
+							<option value="Haiti">Haiti</option>
+							<option value="Heard Island And Mcdonald Islands">Heard Island And Mcdonald Islands</option>
+							<option value="Holy See (vatican City State)">Holy See (vatican City State)</option>
+							<option value="Honduras">Honduras</option>
+							<option value="Hong Kong">Hong Kong</option>
+							<option value="Hungary">Hungary</option>
+							<option value="Iceland">Iceland</option>
+							<option value="India">India</option>
+							<option value="Indonesia">Indonesia</option>
+							<option value="Iran, Islamic Republic Of">Iran, Islamic Republic Of</option>
+							<option value="Iraq">Iraq</option>
+							<option value="Ireland">Ireland</option>
+							<option value="Israel">Israel</option>
+							<option value="Italy">Italy</option>
+							<option value="Jamaica">Jamaica</option>
+							<option value="Japan">Japan</option>
+							<option value="Jordan">Jordan</option>
+							<option value="Kazakstan">Kazakstan</option>
+							<option value="Kenya">Kenya</option>
+							<option value="Kiribati">Kiribati</option>
+							<option value="Korea, Democratic People's Republic Of">Korea, Democratic People's Republic Of</option>
+							<option value="Korea, Republic Of">Korea, Republic Of</option>
+							<option value="Kosovo">Kosovo</option>
+							<option value="Kuwait">Kuwait</option>
+							<option value="Kyrgyzstan">Kyrgyzstan</option>
+							<option value="Lao People's Democratic Republic">Lao People's Democratic Republic</option>
+							<option value="Latvia">Latvia</option>
+							<option value="Lebanon">Lebanon</option>
+							<option value="Lesotho">Lesotho</option>
+							<option value="Liberia">Liberia</option>
+							<option value="Libyan Arab Jamahiriya">Libyan Arab Jamahiriya</option>
+							<option value="Liechtenstein">Liechtenstein</option>
+							<option value="Lithuania">Lithuania</option>
+							<option value="Luxembourg">Luxembourg</option>
+							<option value="Macau">Macau</option>
+							<option value="Macedonia, The Former Yugoslav Republic Of">Macedonia, The Former Yugoslav Republic Of</option>
+							<option value="Madagascar">Madagascar</option>
+							<option value="Malawi">Malawi</option>
+							<option value="Malaysia">Malaysia</option>
+							<option value="Maldives">Maldives</option>
+							<option value="Mali">Mali</option>
+							<option value="Malta">Malta</option>
+							<option value="Marshall Islands">Marshall Islands</option>
+							<option value="Martinique">Martinique</option>
+							<option value="Mauritania">Mauritania</option>
+							<option value="Mauritius">Mauritius</option>
+							<option value="Mayotte">Mayotte</option>
+							<option value="Mexico">Mexico</option>
+							<option value="Micronesia, Federated States Of">Micronesia, Federated States Of</option>
+							<option value="Moldova, Republic Of">Moldova, Republic Of</option>
+							<option value="Monaco">Monaco</option>
+							<option value="Mongolia">Mongolia</option>
+							<option value="Montserrat">Montserrat</option>
+							<option value="Montenegro">Montenegro</option>
+							<option value="Morocco">Morocco</option>
+							<option value="Mozambique">Mozambique</option>
+							<option value="Myanmar">Myanmar</option>
+							<option value="Namibia">Namibia</option>
+							<option value="Nauru">Nauru</option>
+							<option value="Nepal">Nepal</option>
+							<option value="Netherlands">Netherlands</option>
+							<option value="Netherlands Antilles">Netherlands Antilles</option>
+							<option value="New Caledonia">New Caledonia</option>
+							<option value="New Zealand">New Zealand</option>
+							<option value="Nicaragua">Nicaragua</option>
+							<option value="Niger">Niger</option>
+							<option value="Nigeria">Nigeria</option>
+							<option value="Niue">Niue</option>
+							<option value="Norfolk Island">Norfolk Island</option>
+							<option value="Northern Mariana Islands">Northern Mariana Islands</option>
+							<option value="Norway">Norway</option>
+							<option value="Oman">Oman</option>
+							<option value="Pakistan">Pakistan</option>
+							<option value="Palau">Palau</option>
+							<option value="Palestinian Territory, Occupied">Palestinian Territory, Occupied</option>
+							<option value="Panama">Panama</option>
+							<option value="Papua New Guinea">Papua New Guinea</option>
+							<option value="Paraguay">Paraguay</option>
+							<option value="Peru">Peru</option>
+							<option value="Philippines">Philippines</option>
+							<option value="Pitcairn">Pitcairn</option>
+							<option value="Poland">Poland</option>
+							<option value="Portugal">Portugal</option>
+							<option value="Puerto Rico">Puerto Rico</option>
+							<option value="Qatar">Qatar</option>
+							<option value="Reunion">Reunion</option>
+							<option value="Russian Federation">Russian Federation</option>
+							<option value="Rwanda">Rwanda</option>
+							<option value="Saint Helena">Saint Helena</option>
+							<option value="Saint Kitts And Nevis">Saint Kitts And Nevis</option>
+							<option value="Saint Lucia">Saint Lucia</option>
+							<option value="Saint Pierre And Miquelon">Saint Pierre And Miquelon</option>
+							<option value="Saint Vincent And The Grenadines">Saint Vincent And The Grenadines</option>
+							<option value="Samoa">Samoa</option>
+							<option value="San Marino">San Marino</option>
+							<option value="Sao Tome And Principe">Sao Tome And Principe</option>
+							<option value="Saudi Arabia">Saudi Arabia</option>
+							<option value="Senegal">Senegal</option>
+							<option value="Serbia">Serbia</option>
+							<option value="Seychelles">Seychelles</option>
+							<option value="Sierra Leone">Sierra Leone</option>
+							<option value="Singapore">Singapore</option>
+							<option value="Slovakia">Slovakia</option>
+							<option value="Slovenia">Slovenia</option>
+							<option value="Solomon Islands">Solomon Islands</option>
+							<option value="Somalia">Somalia</option>
+							<option value="South Africa">South Africa</option>
+							<option value="South Georgia And The South Sandwich Islands">South Georgia And The South Sandwich Islands</option>
+							<option value="Spain">Spain</option>
+							<option value="Sri Lanka">Sri Lanka</option>
+							<option value="Sudan">Sudan</option>
+							<option value="Suriname">Suriname</option>
+							<option value="Svalbard And Jan Mayen">Svalbard And Jan Mayen</option>
+							<option value="Swaziland">Swaziland</option>
+							<option value="Sweden">Sweden</option>
+							<option value="Switzerland">Switzerland</option>
+							<option value="Syrian Arab Republic">Syrian Arab Republic</option>
+							<option value="Taiwan, Province Of China">Taiwan, Province Of China</option>
+							<option value="Tajikistan">Tajikistan</option>
+							<option value="Tanzania, United Republic Of">Tanzania, United Republic Of</option>
+							<option value="Thailand">Thailand</option>
+							<option value="Togo">Togo</option>
+							<option value="Tokelau">Tokelau</option>
+							<option value="Tonga">Tonga</option>
+							<option value="Trinidad And Tobago">Trinidad And Tobago</option>
+							<option value="Tunisia">Tunisia</option>
+							<option value="Turkey">Turkey</option>
+							<option value="Turkmenistan">Turkmenistan</option>
+							<option value="Turks And Caicos Islands">Turks And Caicos Islands</option>
+							<option value="Tuvalu">Tuvalu</option>
+							<option value="Uganda">Uganda</option>
+							<option value="Ukraine">Ukraine</option>
+							<option value="United Arab Emirates">United Arab Emirates</option>
+							<option value="United Kingdom">United Kingdom</option>
+							<option value="United States">United States</option>
+							<option value="United States Minor Outlying Islands">United States Minor Outlying Islands</option>
+							<option value="Uruguay">Uruguay</option>
+							<option value="Uzbekistan">Uzbekistan</option>
+							<option value="Vanuatu">Vanuatu</option>
+							<option value="Venezuela">Venezuela</option>
+							<option value="Viet Nam">Viet Nam</option>
+							<option value="Virgin Islands, British">Virgin Islands, British</option>
+							<option value="Virgin Islands, U.s.">Virgin Islands, U.s.</option>
+							<option value="Wallis And Futuna">Wallis And Futuna</option>
+							<option value="Western Sahara">Western Sahara</option>
+							<option value="Yemen">Yemen</option>
+							<option value="Zambia">Zambia</option>
+							<option value="Zimbabwe">Zimbabwe</option>
+						</select>
+
+						<div class="doc-container clearfix">
+							<div id="image-preview" class="j-passport">
+								<span class="upload-title">Passport:</span>
+								<img ng-src="{{User.passport}}"/>
+								<label for="passport-upload" id="image-label">Choose File</label>
+								<input name="passport" id="passport-upload" type="file" onchange="angular.element(this).scope().fileNameChanged(this)">
+							</div>
+
+							<div id="image-preview" class="j-registration">
+								<span class="upload-title">Another document:</span>
+								<img ng-src="{{User.registration}}"/>
+								<label for="registration-upload" id="image-label">Choose File</label>
+								<!--input name="registration" id="registration-upload" type="file" custom-on-change="uploadFile" ng-model="User.registration"-->
+								<input name="registration" id="registration-upload" type="file" onchange="angular.element(this).scope().fileNameChanged(this)">
+							</div>
+
+							<div id="image-preview" class="j-photoDoc">
+								<span class="upload-title">Selfie:</span>
+								<img ng-src="{{User.photoDoc}}"/>
+								<label for="photoDoc-upload" id="image-label">Choose File</label>
+								<input name="photoDoc" id="photoDoc-upload" type="file" onchange="angular.element(this).scope().fileNameChanged(this)">
+							</div>
+						</div>
+
+						<input class="btn btn-lg btn-primary btn-block" type="submit" value="Verify" ng-click="saveUserInfo();" ng-if="loadStatus == 0"/>
+						<div class="loader" ng-if="loadStatus == 1"></div>
+						<div ng-if="loadStatus == 2">
+							<a class="btn btn-lg btn-primary btn-block btn_skype" ng-if="false" href="skype:denis.pizhevsky?call">Call to verify</a>
+							<span style="font-size: 22px;">We will send you invite via email after verifying your data.</span>
+						</div>
+
+						<div class="panel" ng-if="errorMessage.length">
+							<div class="alert alert-danger" role="alert">
+								<span>{{errorMessage}}</span>
+							</div>
+						</div>
+						<div class="panel" ng-if="successMessage.length">
+							<div class="alert alert-success" role="alert">
+								<span>{{successMessage}}</span>
+							</div>
+						</div>
+					</form>
+					<div class="form-verified" ng-if="isVerified">
+						<h4>Verified info:</h4>
+						<div>Firstname: {{User.firstname}}</div>
+						<div>Lastname: {{User.lastname}}</div>
+						<div>Birthday: {{User.birthday}}</div>
+						<div>Citizenship: {{User.citizen}}</div>
+						<div>Documents:</div>
+						<div>
+							<img ng-src="{{User.passport}}"/>
+							<img ng-src="{{User.registration}}"/>
+							<img ng-src="{{User.photoDoc}}"/>
+						</div>
+						<button class="btn btn-lg btn-primary btn-block" ng-click="changeUserInfo();">Change</button>
+					</div>
+				</section>
+			</div>
+			<div ng-if="currentTab == 'security'">
+				<h2>Security</h2>
+				<section class="row text-center placeholders section-body">
+					<div class="form-dash">
+						<span>{{User.email}}</span>
+						<div ng-if="!changePasswordView">
+							<button class="btn btn-lg btn-primary btn-block" ng-click="setChangeView(true);">Change Password</button>
+						</div>
+						<form ng-if="changePasswordView && !changePasswordDone">
+							<label for="oldPassword" class="sr-only">Password</label>
+							<input name="oldPassword" type="password" class="form-control" placeholder="Current password" ng-model="formData.oldPassword"/>
+
+							<label for="password" class="sr-only">Password</label>
+							<input name="password" type="password" class="form-control" placeholder="New password" ng-model="formData.password"/>
+
+							<label for="confirm" class="sr-only">Confirm password</label>
+							<input name="confirm" type="password" class="form-control" placeholder="Confirm new password" ng-model="formData.confirm"/>
+
+							<div class="password-tip">
+								<span>* Password must be at least 8 characters long. It should contain uppercase and lowercase letters, numbers and special characters.</span>
+							</div>
+
+							<input class="btn btn-lg btn-primary btn-block" type="submit" value="Change" ng-click="changePassword()"/>
+							<input class="btn btn-lg btn-light btn-block" type="submit" value="Cancel" ng-click="setChangeView(false)"/>
+
+							<div class="panel" ng-if="errorMessage.length">
+								<div class="alert alert-danger" role="alert">
+									<span>{{errorMessage}}</span>
+								</div>
+							</div>
+						</form>
+						<div class="panel" ng-if="changePasswordDone">
+							<h4 class="form-signin-heading">Your Password was changed</h4>
+							<span>Please <a href="/">Login</a></span>
+						</div>
+					</div>
+				</section>
+
+				<section class="row text-center placeholders section-body">
+
+					<form class="form-dash" ng-if="!phoneConfirmDone && !phoneCodeView">
+						<h4>Confirm your phone</h4>
+						<label for="phone" class="sr-only">Phone</label>
+						<input name="phone" type="phone" class="form-control" placeholder="Phone" ng-model="formData.phone"/>
+
+						<input class="btn btn-lg btn-primary btn-block" type="submit" value="Get Code" ng-click="confirmPhone()"/>
+
+						<div class="panel" ng-if="errorMessage.length">
+							<div class="alert alert-danger" role="alert">
+								<span>{{errorMessage}}</span>
+							</div>
+						</div>
+					</form>
+					<form class="form-dash" ng-if="phoneCodeView && !phoneConfirmDone">
+						<h4>Check your phone for code</h4>
+						<label for="phoneCode" class="sr-only">Code</label>
+						<input name="phoneCode" type="phone" class="form-control" placeholder="Code" ng-model="formData.phoneCode"/>
+
+						<input class="btn btn-lg btn-primary btn-block" type="submit" value="Confirm" ng-click="confirmPhoneCode()"/>
+
+						<div class="panel" ng-if="errorMessage.length">
+							<div class="alert alert-danger" role="alert">
+								<span>{{errorMessage}}</span>
+							</div>
+						</div>
+					</form>
+					<div class="panel" ng-if="phoneConfirmDone">
+						<h4 class="form-signin-heading">Your phone number {{formData.phone}} was confirmed</h4>
+					</div>
+				</section>
+				<section class="row text-center placeholders section-body">
+					<div class="form-dash" ng-controller="google2FAController">
+						<div ng-if="!Secret.active && Secret.qr">
+							<img ng-src="{{Secret.qr}}"/><br/>
+							<!--span>Key: {{Secret.key}}</span-->
+							<span>Scan and switch on 2FA</span>
+							<form>
+								<label for="token" class="sr-only">Code</label>
+								<input name="token" type="text" class="form-control" placeholder="Code" ng-model="Secret.token"/>
+
+								<input class="btn btn-lg btn-primary btn-block" type="submit" value="Switch On" ng-click="switchOn();"/>
+							</form>
+							<div class="panel" ng-if="errorMessage.length">
+								<div class="message">
+									<div class="alert alert-danger" role="alert">
+										<span>{{errorMessage}}</span>
+									</div>
+								</div>
+							</div>
+						</div>
+						<div ng-if="Secret.active">
+							<button class="btn btn-lg btn-primary btn-block" ng-click="reset();">Reset 2FA</button>
+						</div>
+					</div>
+				</section>
+			</div>
+		</main>
+	</div>
+</div>
+</body>
+</html>
