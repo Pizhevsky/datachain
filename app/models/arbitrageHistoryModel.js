@@ -35,7 +35,7 @@ module.exports = {
 
 	findByUserId: function(userId){
 		return ArbitrageHistoryModel
-			.findOne({
+			.findAll({
 				where: {'user_id': userId}
 			});
 	},

@@ -66,7 +66,7 @@
 			selected = '',
 			data = {};
 
-		setInterval(tick, 5000);
+		setInterval(tick, 1000);
 
 		function tick() {
 			data.exchanges = JSON.parse(iframe.attr('data-exchanges'));
@@ -89,11 +89,11 @@
 		}
 
 		function render(exchange) {
-			console.log('exchange:', exchange);
+			//console.log('exchange:', exchange);
 			selected = exchange;
 			let chartData = data.charts[exchange];
-			console.log('orderBookChart data:', chartData);
-			if (chartData.bids && chartData.asks) {
+			//console.log('orderBookChart data:', chartData);
+			if (chartData && chartData.bids && chartData.asks) {
 				$('svg').html('Chart drawing...');
 				draw(chartData, svg);
 			}

@@ -49,6 +49,13 @@ h1 {
   border-radius: 0;
 }
 
+.navbar-nav .active .btn{
+  color: #fff;
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+
 /*
  * Dashboard
  */

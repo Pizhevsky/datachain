@@ -32,8 +32,12 @@ module.exports = function(app, passport) {
 	app.post('/resetSecret2FA', isLoggedIn, verificationController.resetSecret2FA);
 
 	app.post('/getUserReferals', isLoggedIn, verificationController.getUserReferals);
+	app.post('/getWalletData', isLoggedIn, verificationController.getWalletData);
+	app.post('/getHistoryData', isLoggedIn, verificationController.getHistoryData);
 	app.post('/getUserData', isLoggedIn, verificationController.getUserData);
 	app.post('/setUserData', isLoggedIn, verificationController.setUserData);
+	app.post('/sendWithdrawEmail', isLoggedIn, verificationController.sendWithdrawEmail);
+	app.get('/verifyWithdraw/:token', verificationController.verifyWithdraw);
 
 	app.post('/phoneConfirm', isLoggedIn, verificationController.getPhoneCode);
 	app.post('/phoneCodeConfirm', isLoggedIn, verificationController.phoneCodeConfirm);
@@ -57,6 +61,7 @@ module.exports = function(app, passport) {
 
 	function isLoggedIn (req, res, next) {
 		if (req.isAuthenticated()) {
+			console.log(req.user && req.user.id, req.url);
 			return next();
 		}
 

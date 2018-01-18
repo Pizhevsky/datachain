@@ -25,6 +25,10 @@ const balanceHistoryAttributes = {
 		type: Sequelize.ENUM('e', 'a'),
 		field: 'src'
 	},
+	txid: {
+		type: Sequelize.STRING,
+		field: 'txid'
+	},
 	dateTime: {
 		type: Sequelize.DATE,
 		field: 'date_time'
@@ -39,7 +43,7 @@ module.exports = {
 
 	findByUserId: function(userId){
 		return BalanceHistoryModel
-			.findOne({
+			.findAll({
 				where: {'user_id': userId}
 			});
 	},
@@ -47,15 +51,5 @@ module.exports = {
 	createNew: function(data) {
 		return BalanceHistoryModel
 			.create(data);
-	},
-
-	update: function(data) {
-		let obj = {};
-		obj[data.currency] = data.amount;
-
-		return BalanceHistoryModel
-			.update(obj, {
-				where: { 'user_id': data.userId }
-			});
 	}
 };

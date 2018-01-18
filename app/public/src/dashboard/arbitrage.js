@@ -59,12 +59,19 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 		}
 	);
 
+
 	function start() {
+		post('/getWalletData', {}, function(data) {
+			console.log('arbitrage getWalletData:', data);
+
+			$scope.userBalances = data.balances;
+		});
+
 		post('/getExchangesList', {}, function(response) {
 			exchangesList = response;
 
 			Starter.init({
-				market: 'BTC-USD',
+				market: 'BTC-ETH',
 				exchanges: exchangesList,
 				includes: ['ticker', 'orderBook']
 			});
@@ -158,8 +165,8 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 		let minValue = 1000000000,
 			maxValue = 0,
 			amount = $scope.model.order.amount || 0,
-			isDirect =  $scope.currency == 'BTC', // !isDirect === $scope.currency == 'USD'
-			precision =  isDirect ? 100 : 1000000,
+			isDirect =  $scope.currency == 'BTC',
+			precision = 1000000,// isDirect ? 100 : 1000000,
 			sign = $scope.action == 'buy' && !isDirect
 				|| $scope.action == 'sell' && isDirect
 				? -1
@@ -177,7 +184,7 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 			return price * fee;
 		}
 
-		function countByOrderBook(val, item) {
+		function countByOrderBook(val, item)    {
 			if (!book[item.name]) {
 				return 0;
 			}
@@ -189,7 +196,8 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 					? val * bookSample
 					: val / bookSample;
 
-			item.priceByOrderBook = (price / val).toFixed(2);
+			let fix = parseFloat(price).toString().length - parseInt(price).toString().length - 1;
+			item.priceByOrderBook = (price / val).toFixed(fix);
 			return price * fee;
 		}
 
@@ -229,9 +237,10 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 				mixVal += price*fee;
 			});
 
-			$scope.mixPrice = isNaN(mixVal) ? 0 : mixVal.toFixed(2);
+			let fix = isNaN(mixVal) ? 0 : Math.min(parseFloat(mixVal).toString().length - parseInt(mixVal).toString().length - 1, 10);
+			$scope.mixPrice = isNaN(mixVal) ? 0 : mixVal.toFixed(fix);
 
-			console.log('mixVal:', mixVal, mixSample);
+			//console.log('mixVal:', mixVal, mixSample);
 		}
 
 		$scope.model.exchanges = exchangesModel;
@@ -267,7 +276,9 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 			num = 0;
 		}
 
-		let price = Math.round(100 * accum / (total-num)) / 100;
+		console.log('accum:',accum);
+		let fix = Math.pow(10, Math.min(parseFloat(accum).toString().length - parseInt(accum).toString().length - 1, 8));
+		let price = Math.round(fix * accum / (total-num)) / fix;
 
 		return withEx
 			? exchanges
@@ -276,7 +287,7 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 
 	function getCommonBook() {
 		let commonBook = { bids: [], asks: [] };
-		console.log('getCommonBook book:',book);
+		//console.log('getCommonBook book:',book);
 		Object.keys(book).forEach(key => {
 			let itemBook = {
 				bids: book[key].bids.map(item => {
@@ -338,9 +349,9 @@ angular.module('dashboardApp').controller('arbitrageController', function($scope
 		// 	showErrorMessage('Please set price!');
 		// 	return false;
 		// }
-		let amount = $scope.currency == 'USD' ? order.amount / tick[exchange.name].last : order.amount;
+		let amount = $scope.currency == 'BTC' ? order.amount : order.amount / tick[exchange.name].last;
 
-		console.log('sendOrder exchange:', exchange);
+		//console.log('sendOrder exchange:', exchange);
 
 		let data = {
 			exchange: exchange.name,

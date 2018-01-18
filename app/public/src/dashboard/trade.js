@@ -61,6 +61,12 @@ angular.module('dashboardApp').controller('tradeController', function($scope, $h
 					scrolls.trade = new PerfectScrollbar('#scrollbar6');
 					scrolls.exchanges = new PerfectScrollbar('#scrollbar7');
 
+					post('/getWalletData', {}, function(data) {
+						console.log('trade getWalletData:', data);
+
+						$scope.userBalances = data.balances;
+					});
+
 					post('/getExchangesList', {}, function(response) {
 						console.log('getExchangesList:', response);
 						$scope.model.exchanges = response;
@@ -260,21 +266,21 @@ angular.module('dashboardApp').controller('tradeController', function($scope, $h
 			$scope.$watch(
 				scope => m.price,
 				value => {
-					console.log('new price=', value);
+					//console.log('new price=', value);
 					m.result = m.amount * value;
 				}
 			);
 			$scope.$watch(
 				scope => m.amount,
 				value => {
-					console.log('new amount=', value);
+					//console.log('new amount=', value);
 					m.result = m.price * value;
 				}
 			);
 			$scope.$watch(
 				scope => m.result,
 				value => {
-					console.log('new result=', value);
+					//console.log('new result=', value);
 					m.amount = value / m.price;
 				}
 			);

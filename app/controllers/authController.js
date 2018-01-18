@@ -58,10 +58,11 @@ var loginLog = function(data, success) {
 				} else {
 					UserModel.findByUserEmail(data.email)
 						.then(user => {
+							logger.trace('Login info:', data, 'user history:', result.dataValues);
 							if (user && result.loginIp != data.loginIp) {
 								let supportMail = 'support@arbidex-promo.com'; // 'support@datachain.awsapps.com'
 								emailSender.send(data.email, {
-									subj: `New login from ${data.loginIp}`,
+									subj: `New login from ${data.device}`, //loginIp
 									html: `Hello,<br>We detected a new entry device: ${data.device}.<br>If you did not perform this login send an email immediately to 
 									<a target="_blank" href="mailto:${supportMail}" style="word-wrap:break-word;color:#4995c4;font-weight:normal;text-decoration:none;">
 										${supportMail}

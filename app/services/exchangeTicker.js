@@ -16,8 +16,9 @@ var Exchanges = {
 let ticker = null;
 let exchangesData = {};
 let exchangesMarkets = {};
+let commonMarkets = ['BTC-ETH', 'BTC-USD'];
 let config = {
-	markets: ['BTC-ETH'], // 'BTC-USD'
+	markets: ['BTC-ETH', 'BTC-USD'],
 	marketsCount: 1,
 	exchanges: ['Bitfinex','Bittrex','Wex','Poloniex'],
 	actions: ['ticker', 'orderBook', 'trades'],
@@ -39,6 +40,7 @@ function getExchangeMarkets(exchange) {
 		.then(array => {
 			exchangesMarkets[exchange] = array;
 			if (Object.keys(exchangesMarkets).length == config.exchanges.length) {
+				console.log('ticker run...');
 				startTicker();
 			}
 		});
@@ -46,16 +48,16 @@ function getExchangeMarkets(exchange) {
 
 function makeRequest(exchange, action, market) {
 	let marketFound = exchangesMarkets[exchange].indexOf(market) != -1
-		|| config.markets.indexOf(market) != -1;
+		|| commonMarkets.indexOf(market) != -1;
 	if (marketFound) {
 		Exchanges[exchange][action]({market, depth: config.depth})
 			.then(response => {
 				exchangesData[exchange][action][market] = response;
 			})
 			.catch(e => {
-				let a = exchangesMarkets;
+				//let a = exchangesMarkets;
 				console.error(`Don't worry exchange dido:`, exchange, action, market);
-				console.log('ERROR >>', e.error || e);
+				//console.log('ERROR >>', e.error || e);
 			});
 	}
 }
@@ -64,14 +66,15 @@ function send() {
 	config.exchanges.forEach(exchange => {
 		config.actions.forEach(action => {
 			config.markets.forEach(market => {
-				makeRequest(exchange, action, market);
+				setTimeout(() => {
+					makeRequest(exchange, action, market);
+				}, 200);
 			});
 		});
 	});
 }
 
 function startTicker(seconds) {
-	var a = exchangesMarkets;
 	if (ticker) {
 		clearInterval(ticker);
 		ticker = null;
@@ -94,7 +97,6 @@ module.exports = {
 			config.markets.push(options.market);
 		}
 
-		let a = exchangesData;
 		return options.action
 			? options.market
 				? exchangesData[options.exchange][options.action][options.market]

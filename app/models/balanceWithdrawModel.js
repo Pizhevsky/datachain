@@ -21,6 +21,10 @@ const balanceWithdrawAttributes = {
 		type: Sequelize.STRING,
 		field: 'address'
 	},
+	token: {
+		type: Sequelize.STRING,
+		field: 'token'
+	},
 	approved: {
 		type: Sequelize.BOOLEAN,
 		field: 'approved'
@@ -44,9 +48,16 @@ module.exports = {
 			});
 	},
 
+	findByWithdrawToken: function(token) {
+		return BalanceWithdrawModel
+			.findOne({
+				where: {'token': token}
+			});
+	},
+
 	createNew: function(data) {
-		return BalanceHistoryModel
-			.create(BalanceWithdrawModel);
+		return BalanceWithdrawModel
+			.create(data);
 	},
 
 	update: function(data) {

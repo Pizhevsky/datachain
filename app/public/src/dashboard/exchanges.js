@@ -282,7 +282,7 @@ angular.module('dashboardApp').factory('Exchanges', function($http) {
 		getExchanges: () => Object.keys(urlParts),
 
 		parse: (exchange, market, method, response) => {
-			console.log('------', exchange, market, method, 'parse data:', response.data);
+			//console.log('------', exchange, market, method, 'parse data:', response.data);
 			return response.data ? parse[method][exchange](response.data, market) : null;
 		},
 

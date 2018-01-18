@@ -4,9 +4,16 @@ angular.module('dashboardApp').factory('Starter', function(Exchanges) {
 		'BTC-USD': {
 			Bitfinex: 'btcusd',
 			Bittrex: 'USDT-BTC',
-			Kraken: 'XXBTZUSD',
+			//Kraken: 'XXBTZUSD',
 			Wex: 'btc_usd',
 			Poloniex: 'USDT_BTC'
+		},
+		'BTC-ETH': {
+			Bitfinex: 'ethbtc',
+			Bittrex: 'BTC-ETH',
+			//Kraken: '?',
+			Wex: 'eth_btc',
+			Poloniex: 'BTC_ETH'
 		}
 	};
 
@@ -27,8 +34,8 @@ angular.module('dashboardApp').factory('Starter', function(Exchanges) {
 			(function (action) {
 				Exchanges[action](exchange, market)
 					.then(response => {
-						console.log('Starter:', exchange, market, action, 'response:', response);
-						if (response) {
+						//console.log('Starter:', exchange, market, action, 'response:', response);
+						if (response && response.data) {
 							actionsCallbacks[action](exchange, market, Exchanges.parse(exchange, market, action, response));
 						}
 					});
@@ -40,7 +47,7 @@ angular.module('dashboardApp').factory('Starter', function(Exchanges) {
 		if (state.exchanges.length) {
 			let isSingle = state.exchanges.length == 1;
 			if (!isSingle) {
-				if (state.market != 'BTC-USD') {
+				if (Object.keys(exchangesMarkets).indexOf(state.market) == -1) {
 					console.error(state.market + ' not ready yet!');
 					return;
 				}
@@ -66,6 +73,7 @@ angular.module('dashboardApp').factory('Starter', function(Exchanges) {
 	return {
 		init: (options) => {
 			angular.extend(state, options);
+			console.log('init Starter with config:', state);
 			startTicker();
 		},
 	

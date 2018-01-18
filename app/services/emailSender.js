@@ -101,4 +101,15 @@ module.exports = {
 		});
 	},
 
+	confirmWithdraw: function (params) {
+		let host = params.host || 'https://arbidex-promo.com',
+			url = host + '/verifyWithdraw/' + params.token;
+		send(params.email, {
+			subj: 'Please confirm your Withdraw',
+			html: `Hello,<br> If you want to withdraw ${params.amount} ${params.currency.toUpperCase()} to adress: ${params.address}, - click on the link: <a href="${url}">Click here to verify</a><br><br>If the link doesn't work you can copy and paste into the address bar this link: ${url}<br><br>If it isn't you, please, write to support@arbidex-promo.com.`,
+			success: params.success,
+			fail: params.fail
+		});
+	},
+
 };

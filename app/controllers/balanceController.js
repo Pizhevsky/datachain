@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require("fs");
+const path = require("path");
 const rp = require('request-promise');
 const UserArbitrageModel = require('../models/userArbitrageModel');
 const UserBalanceModel = require('../models/userBalanceModel');
@@ -25,7 +26,7 @@ const _get = function(path, email) {
 		}
 	};
 
-	console.log('Send to wallet:', options);
+	// console.log('Send to wallet:', options);
 
 	return rp(options);
 };
@@ -49,7 +50,7 @@ const _post = function(path, body, email) {
 		body
 	};
 
-	console.log('Send to wallet:', options);
+	//console.log('Send to wallet:', options);
 
 	return rp(options);
 };
@@ -59,8 +60,29 @@ module.exports = {
 		return _post('users/',  JSON.stringify(data));
 	},
 
-	getUserInfo: function (user) {
-		return _get('users/info', user.email);
+	getUserAddresses: function (user) {
+		return _get('users/info', user.email)
+			.then(info => {
+				info = JSON.parse(info);
+
+				return info.data && info.data.addresses;
+			});
+	},
+
+	getUserTransactions: function (user) {
+		return Promise.all([
+			_get(`transactions/btc`, user.email),
+			_get(`transactions/eth`, user.email)
+		])
+		.then(([tbtc, teth]) => {
+			tbtc = JSON.parse(tbtc);
+			teth = JSON.parse(teth);
+
+			return {
+				btc: tbtc.data,
+				eth: teth.data
+			};
+		});
 	},
 
 	getUserBalances: function (user) {
@@ -84,28 +106,54 @@ module.exports = {
 			return;
 		}
 
+		if(!req.body) {
+			res.send({"data": {},"error": {"status": 1,"message": "Balance not found"}});
+			return;
+		}
+
 		let email = req.headers['x-email'];
 		let currency = req.params.currency;
-		let prev_balance = req.body ? req.body.prev_balance : -1;
-		let new_balance = req.body ? req.body.new_balance : -1;
-		let balance = {};
-		balance[currency] = new_balance;
-		logger.trace('onWalletUpdate email:', email);
-		logger.trace('onWalletUpdate balance:', balance);
+		let prev_balance = req.body.prev_balance;
+		let new_balance = req.body.new_balance;
 
 		UserModel.findByUserEmail(email)
 			.then(user => {
 				logger.trace('onWalletUpdate user.id:', user.id);
-				UserBalanceModel.update(user.id, balance)
-					.then(result => {
-						logger.trace('onWalletUpdate balance updated:', currency, ':', prev_balance, '->', new_balance);
-						console.log('balance updated: ', currency, ':', prev_balance, '->', new_balance);
-						res.send({"error": {"status": 0}});
+				UserBalanceModel.findByUserId(user.id)
+					.then(userBalance => {
+						let balance = {};
+						let growth = parseFloat(new_balance) - parseFloat(prev_balance);
+						balance[currency] = userBalance[currency] + growth;
+						logger.trace('onWalletUpdate email:', email);
+						logger.trace('onWalletUpdate balance:', userBalance, 'will update by', currency, ':', prev_balance, '->', new_balance);
+
+						UserBalanceModel.update(user.id, balance)
+							.then(result => {
+								logger.trace(user.id, 'onWalletUpdate balance updated:', currency, ':', prev_balance, '->', new_balance);
+								console.log('onWalletUpdate balance updated: ', currency, ':', prev_balance, '->', new_balance);
+								BalanceHistoryModel.createNew({
+										userId: user.id,
+										currency: currency,
+										amount: growth,
+										txid: '',
+										type: 'in',
+										src: 'e',
+										dateTime: new Date()
+									})
+									.then(history => {
+										res.send({"error": {"status": 0}});
+									});
+							})
+							.catch(e => {
+								logger.error(user.id, 'onWalletUpdate balance not updated:', currency, ':', prev_balance, '->', new_balance);
+								res.send({"error": e});
+							});
 					})
 					.catch(e => {
-						logger.error('onWalletUpdate balance not updated:', currency, ':', prev_balance, '->', new_balance);
+						logger.error(user.id, 'onWalletUpdate balance not found:', currency, ':', prev_balance, '->', new_balance);
 						res.send({"error": e});
 					});
+
 			})
 			.catch(e => {
 				logger.error('onWalletUpdate user not found:', email);
@@ -113,34 +161,11 @@ module.exports = {
 			});
 	},
 
-	sendCurrency: function (req, res) {
-		let currency = req.body.currency && req.body.currency.toLowerCase();
-		if (!req.body.currency) {
-			res.send({ success: false, message: 'Currency not found!' });
-			return;
-		}
-
-		let address = currencyAdress[currency];
-		if (!address) {
-			res.send({ success: false, message: 'Currency not supported!' });
-			return;
-		}
-
-		let obj = {};
-		obj[currency] = req.body.total;
-
-		UserArbitrageModel.update(req.user.id, obj)
-			.then(result => {
-				let data = {
-					amount: req.body.amount,
-					address
-				};
-
-				_post('/wallets/' + currency,  JSON.stringify(data), req.body.email)
-					.then(data => {
-						res.send({ success: true, data });
-					});
-			})
-
+	sendCurrency: function (params) {
+		let data = {
+			amount: params.amount,
+			address: params.address
+		};
+		return _post('/wallets/' + params.currency,  JSON.stringify(data), params.email);
 	}
 };

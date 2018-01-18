@@ -72,7 +72,7 @@ body {
 	cursor: pointer;
 }
 .form-doc .doc-container {
-	margin: 20px 0;
+	margin: 10px 0;
 }
 .clearfix::after {
 	content: "";
@@ -220,4 +220,14 @@ table.arb_trade tbody tr.tab_btn td.active {
 .upload-title {
 	margin: -20px 0 0;
 	color: #444;
+}
+
+.glyphicon_link {
+	font-size:22px;
+	line-height: 15px;
+}
+
+.glyphicon_link.disabled {
+	opacity: .65;
+	pointer-events: none;
 }

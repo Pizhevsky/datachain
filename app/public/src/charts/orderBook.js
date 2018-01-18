@@ -6,35 +6,43 @@ const draw = (unsortedData, target, d3 = window.d3) => {
 	const y = d3.scaleLinear().range([height, 0]);
 
 	let yMin = 0;
+	let fix = 2;
 	const data = (function (bids, asks) {
 		let maxBid = parseFloat(bids.slice(0,1)[0].price);
 		let spread = parseFloat(asks.slice(0,1)[0].price) - maxBid;
 		let middle = maxBid + spread / 2;
 		let step = Math.min(10, spread);
 		let max = 0;
+		let priceMaxLength = 0;
 
 		function summarize(array, type) {
 			let isBid = type == 'bid',
 				stepPrice = isBid ? 1000000 : 0,
 				sign = isBid ? -1 : 1,
 				result = [],
-				total = 0;
+				totalAmount = 0,
+				marketPrice = 0;
 
 			array.forEach(item => {
-				total += parseFloat(item.amount);
-				if (isBid && item.price < stepPrice || !isBid && item.price > stepPrice) {
-					stepPrice = parseFloat(item.price) + sign * step;
-					result.push({
-						price: parseFloat(item.price),
-						amount: item.amount,
-						total,
-						type
-					});
-				} else {
-					result[result.length - 1].amount += parseFloat(item.amount);
+				marketPrice += parseFloat(item.price) * item.amount;
+				totalAmount += parseFloat(item.amount);
+				if(parseFloat(item.price) <  2 * marketPrice / totalAmount) {
+					if (isBid && item.price < stepPrice || !isBid && item.price > stepPrice) {
+						stepPrice = parseFloat(item.price) + sign * step;
+						result.push({
+							orderPrice: parseFloat(item.price),
+							orderAmount: item.amount,
+							totalPrice: marketPrice / totalAmount,
+							totalAmount: totalAmount,
+							type
+						});
+					} else {
+						result[result.length - 1].totalAmount += parseFloat(item.amount);
+					}
+					priceMaxLength = Math.max(priceMaxLength, item.price.toString().length - parseInt(item.price));
 				}
 			});
-			max = Math.max(total, max);
+			max = Math.max(totalAmount, max);
 
 			return result;
 		}
@@ -43,10 +51,12 @@ const draw = (unsortedData, target, d3 = window.d3) => {
 		let asksResult = summarize(asks, 'ask');
 
 		yMin = -5*max/height;
+		fix = spread > 10 ? 2 : priceMaxLength;
+
 		bidsResult.push({
-			price: middle,
-			amount: spread,
-			total: max,
+			orderPrice: middle,
+			orderAmount: spread,
+			totalAmount: max,
 			type: 'spread'
 		});
 
@@ -54,14 +64,14 @@ const draw = (unsortedData, target, d3 = window.d3) => {
 
 	})(unsortedData.bids, unsortedData.asks);
 
-	console.log(yMin, 'draw data:', data);
+	//console.log(yMin, 'draw data:', data);
 
 	// x.domain([
 	// 	d3.min(data, d => d.price),
 	// 	d3.max(data, d => d.price) + 1,
 	// ]);
-	x.domain(d3.extent(data, d => d.price));
-	y.domain([yMin, d3.max(data, d => d.total)]);
+	x.domain(d3.extent(data, d => d.orderPrice));
+	y.domain([yMin, d3.max(data, d => d.totalAmount)]);
 
 	$('svg').empty();
 	const g = target.append('g')
@@ -85,9 +95,9 @@ const draw = (unsortedData, target, d3 = window.d3) => {
 		.attr('class', d => `bar ${d.type}`)
 		.attr('x', d => {
 			//let c = d.type == 'bid' ? -10 : 10;
-			return x(d.price); // + c;
+			return x(d.orderPrice); // + c;
 		})
-		.attr('y', d => y(d.total))
+		.attr('y', d => y(d.totalAmount))
 		.attr('width', (d, i) => {
 			//return width/data.length - 5;
 			// is there a next element and do they have the same type:
@@ -96,27 +106,27 @@ const draw = (unsortedData, target, d3 = window.d3) => {
 				return 5;
 			}
 			if (data[i + 1] && data[i + 1].type === d.type) {
-				return x(data[i + 1].price) - x(d.price) + 2;
+				return x(data[i + 1].orderPrice) - x(d.orderPrice) + 2;
 				// is there a next element and they don't have the same type:
 				// market price valley
 			} else if (data[i + 1]) {
 				return (x.range()[1] - x.range()[0]) / data.length + 2;
 			}
 			// this is the last element: fill until the end of the graph
-			return x.range()[1] - x(d.price) + 2;
+			return x.range()[1] - x(d.orderPrice) + 2;
 		})
-		.attr('height', d => height - y(d.total))
+		.attr('height', d => height - y(d.totalAmount))
 		.on('mouseover', (d) => {
 			tooltip.transition()
 				.duration(500)
 				.style('opacity', 1);
 
-
 			let html = '<table>';
 			if (d.type == 'spread') {
-				html += `<tr><td>Spread: ${(d.price - d.amount / 2).toFixed(2)} - ${(d.price + d.amount / 2).toFixed(2)}</td></tr>`;
+				html += `<tr><td>Spread:</td></tr><tr><td>${(d.orderPrice - d.orderAmount / 2).toFixed(fix)} -</td></tr><tr><td>${(d.orderPrice + d.orderAmount / 2).toFixed(fix)}</td></tr>`;
 			} else {
-				d.price = parseFloat(d.price).toFixed(2);
+				d.orderPrice = parseFloat(d.orderPrice).toFixed(fix);
+				d.totalPrice = parseFloat(d.totalPrice).toFixed(fix);
 				Object.keys(d).forEach((key) => {
 					html += `<tr><td><b>${key}</b></td><td>${d[key]}</td></tr>`;
 				});
