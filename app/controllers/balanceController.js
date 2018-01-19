@@ -62,12 +62,23 @@ function startProfit() {
 	ArbitrageProfitModel.getProfit()
 		.then(profits => {
 
-			function updateBalance(userId, currency, amount, date) {
-				let data = { userId };
-				data[currency] = amount;
+			function getFloatLength(number) {
+				return parseFloat(number).toString().length - parseInt(number).toString().length - 1;
+			}
 
-				console.log('---------------:', date, data);
-				if (profits.length) calc(profits.pop());
+			function updateBalance(userId, currency, amount, profit) {
+				let data = { userId };
+				let percent = profit.profit / 100;
+
+				let precision = Math.pow(10, getFloatLength(amount) + getFloatLength(percent));
+				data[currency] = Math.round(amount * percent * precision) / precision;
+
+				// let precision = getFloatLength(amount) + getFloatLength(percent);
+				// console.log(amount, percent, 'precision:',precision);
+				// data[currency] = 1*parseFloat(amount * percent).toFixed(precision);
+
+				console.log('---------------:', profit.date, data);
+				if (profits.length) calc(profits.shift());
 				// UserArbitrageModel.update(data)
 				// 	.then(result => {
 				// 		calc(profits[++step]);
@@ -76,10 +87,10 @@ function startProfit() {
 
 			function calc(profit) {
 				let stepUsers;
-
+				console.log('profits.length:', profits.length);
 				function calcUser(history) {
-					//console.log(profit.dataValues, history.dataValues);
-					//console.log('--------------------------------');
+					console.log(profit.dataValues, history.dataValues);
+					console.log('--------------------------------');
 
 					let sign = history.type == 'in' ? 1 : -1;
 
@@ -103,17 +114,17 @@ function startProfit() {
 
 							Object.keys(stepUsers).forEach(userId => {
 								Object.keys(stepUsers[userId]).forEach(currency => {
-									let amount = stepUsers[userId][currency] * profit.profit / 100;
-									updateBalance(userId, currency, amount, profit.date);
+									let amount = stepUsers[userId][currency];
+									updateBalance(userId, currency, amount, profit);
 								});
 							});
 						} else {
-							if (profits.length) calc(profits.pop());
+							if (profits.length) calc(profits.shift());
 						}
 					});
 			}
 
-			calc(profits.pop());
+			calc(profits.shift());
 		});
 }
 startProfit();
