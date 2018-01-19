@@ -74,7 +74,7 @@
 </header>
 
 <div class="container-fluid clearfix" style="display:none; text-align: center;" ng-controller="chainsController" ng-show="currentPage == 'instruction'">
-	<iframe src="https://drive.google.com/file/d/1-ZlJ4QFcWaaaLI2WDGXnBWAm80ppMbek/preview" style="width: 800px; height: 960px; margin: 20px auto;"></iframe>
+	<iframe src="https://drive.google.com/file/d/1cXbLStXqYxVEjiPEFnuG9UUpIUgdrP0y/preview" style="width: 800px; height: 960px; margin: 20px auto;"></iframe>
 </div>
 
 <div class="container-fluid clearfix" style="display:none;" ng-controller="chainsController" ng-show="currentPage == 'chains'">
@@ -818,13 +818,13 @@
 										<div class="collapse_container" ng-if="isVerified && need2FA">
 											<h4>Withdraw</h4>
 											<form>
-												<div ng-if="item.withdrawView == 'withdraw'">
+												<div ng-if="item.withdrawView == 'withdraw'" style="width: 500px; margin: 0 auto; text-align: left;">
 													<label>Address:</label>
 													<input style="display: inline-block; width: 400px; margin: 0 10px 5px;" name="address" type="text" class="form-control" placeholder="Address" ng-model="item.withdraw_balance_address"/>
 													<br/>
 													<label>Amount:</label>
 													<input style="display: inline-block; width: 150px; margin: 0 10px 5px;" name="amount" type="number" class="form-control" placeholder="Amount" ng-model="item.withdraw_balance_amount"/>
-
+													<span>Transaction fee: {{transactionFees[item.currency]}} {{item.currency.toUpperCase()}}</span>
 
 													<input  style="width: 225px; margin: 0 auto;" class="btn btn-lg btn-primary btn-block" type="submit" value="Withdraw" ng-click="withdraw(item);"/>
 												</div>
@@ -1035,7 +1035,6 @@
 						as well as your photo with one of the documents, and a sheet with the handwritten sign «ARBIDEX, your name, date».
 						Make sure, that your face is clearly visible, and all information in your ID is clearly readable.
 						Then you need to wait for the confirmation of verification.
-						You will receive an e-mail when it is completed and an invitation on Skype interview with all necessary details.
 						For more information, please look at <a href="javascript:void(0)" class="alert-link" ng-click="changePage('instruction');">Instruction</a>.
 					</span>
 				</div>

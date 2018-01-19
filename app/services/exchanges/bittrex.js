@@ -274,14 +274,17 @@ module.exports = {
 				}
 
 				let balances = {};
-				data.result.filter(item => !!currencyMap[item.Currency.toUpperCase()])
-					.forEach(item => {
-						let currency = currencyMap[item.Currency.toUpperCase()];
-					balances[currency] = {
-						amount: item.Balance,
-						available: item.Available
-					};
-				});
+				console.log('Bittrex getArbitrageInfo getbalances data:', data);
+				if (data) {
+					data.result.filter(item => !!currencyMap[item.Currency.toUpperCase()])
+						.forEach(item => {
+							let currency = currencyMap[item.Currency.toUpperCase()];
+						balances[currency] = {
+							amount: item.Balance,
+							available: item.Available
+						};
+					});
+				}
 
 				let orders = [];
 				bittrex.getorderhistory({}, function(data, err) {

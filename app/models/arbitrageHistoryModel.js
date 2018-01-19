@@ -21,6 +21,10 @@ const arbitrageHistoryAttributes = {
 		type: Sequelize.ENUM('in', 'out'),
 		field: 'type'
 	},
+	profit: {
+		type: Sequelize.BOOLEAN,
+		field: 'profit'
+	},
 	dateTime: {
 		type: Sequelize.DATE,
 		field: 'date_time'
@@ -37,6 +41,17 @@ module.exports = {
 		return ArbitrageHistoryModel
 			.findAll({
 				where: {'user_id': userId}
+			});
+	},
+
+	findByDate: function(date) {
+		return ArbitrageHistoryModel
+			.findAll({
+				where: {
+					'date_time': {
+						$between: [new Date('2017-12-12'), date]
+					}
+				}
 			});
 	},
 

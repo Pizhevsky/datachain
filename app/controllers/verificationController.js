@@ -123,7 +123,7 @@ let investors = {
 var copyWalletData = function () {
 	let count = 0;
 	let getBalance = function(user) {
-		if (user.id <= 1100 || user.id > 1500) {
+		if (user.id <= 0 || user.id > 300) {
 			return false;
 		}
 		BalanceController.getUserBalances(user)
@@ -238,7 +238,7 @@ var work = function (startIndex) {
 			users.forEach(getTransactions);
 		});
 };
-// var step = 1;
+var step = 0;
 // work(step*50);
 // var interval = setInterval(() => {
 // 	step++;
@@ -445,15 +445,21 @@ module.exports = {
 				UserBalanceModel.findByUserId(req.user.id)
 			])
 			.then(([user, arbitrage, balance])=> {
-				logger.trace(user.id, 'Get wallet arbitrage:', arbitrage.dataValues);
-				logger.trace(user.id, 'Get wallet balance:', balance.dataValues);
+				console.log(user.id, 'Get wallet arbitrage:', arbitrage.dataValues);
+				console.log(user.id, 'Get wallet balance:', balance.dataValues);
 
-				BalanceController.getUserAddresses(user)
-					.then(addresses => {
-						logger.trace(req.user.id, 'Get wallet addresses:',  addresses ? 'addresses found' : 'addresses empty');
+				Promise.all([
+						BalanceController.getUserAddresses(user),
+						BalanceController.getNetworkFee()
+					])
+					.then(([addresses, feeData]) => {
+						console.log(req.user.id, 'Get wallet addresses:',  addresses ? 'addresses found' : 'addresses empty');
+						let networkFee = JSON.parse(feeData);
+						let fee = networkFee.data;
 
 						let data = {
 							addresses,
+							fee,
 							balances: {
 								abx: balance.abx,
 								btc: balance.btc,
@@ -471,6 +477,9 @@ module.exports = {
 					.catch(e => {
 						logger.error(user.id, 'Get addresses error:', e);
 					});
+			})
+			.catch(e => {
+				logger.error(req.user.id, 'getWalletData error:', e);
 			});
 	},
 
@@ -481,12 +490,12 @@ module.exports = {
 				ArbitrageHistoryModel.findByUserId(req.user.id)
 			])
 			.then(([user, balance, arbitrage]) => {
-				logger.trace(user.id, 'Get balanceHistory:', balance ? 'balanceHistory found' : 'balanceHistory empty');
-				logger.trace(user.id, 'Get balanceHistory:', arbitrage ? 'arbitrageHistory found' : 'arbitrageHistory empty');
+				console.log(user.id, 'Get balanceHistory:', balance ? 'balanceHistory found' : 'balanceHistory empty');
+				console.log(user.id, 'Get balanceHistory:', arbitrage ? 'arbitrageHistory found' : 'arbitrageHistory empty');
 
 				BalanceController.getUserTransactions(user)
 					.then(transactions => {
-						logger.trace(user.id, 'Get wallet transactions:',  transactions ? 'transactions found' : 'transactions empty');
+						console.log(user.id, 'Get wallet transactions:',  transactions ? 'transactions found' : 'transactions empty');
 
 						let data = {
 							transactions,
@@ -501,6 +510,9 @@ module.exports = {
 					.catch(e => {
 						logger.error(user.id, 'Get transactions error:', e);
 					});
+			})
+			.catch(e => {
+				logger.error(req.user.id, 'getHistoryData error:', e);
 			});
 	},
 
@@ -511,11 +523,11 @@ module.exports = {
 				UserActivationModel.findByUserId(req.user.id)
 			])
 			.then(([user, userInfo, activation]) => {
-				logger.trace(user.id, 'Get activation:', activation && activation.dataValues && `active:${activation.dataValues.active}, blocked:${activation.dataValues.blocked}`);
+				console.log(user.id, 'Get activation:', activation && activation.dataValues && `active:${activation.dataValues.active}, blocked:${activation.dataValues.blocked}`);
 
 				BalanceController.getUserAddresses(user)
 					.then(addresses => {
-						logger.trace(user.id, 'Get wallet info:',  addresses ? 'addresses found' : 'addresses empty');
+						console.log(user.id, 'Get wallet info:',  addresses ? 'addresses found' : 'addresses empty');
 
 						userInfo.dataValues.addresses = addresses;
 						userInfo.dataValues.email = user.email;
@@ -527,6 +539,9 @@ module.exports = {
 					.catch(e => {
 						logger.error(user.id, 'Get addresses error:', e);
 					});
+			})
+			.catch(e => {
+				logger.error(req.user.id, 'getUserData error:', e);
 			});
 	},
 

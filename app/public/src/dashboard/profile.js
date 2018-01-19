@@ -192,6 +192,7 @@ angular.module('dashboardApp').controller('profileController', function($scope, 
 				}
 			});
 			$scope.wallets = wallets;
+			$scope.transactionFees = data.fee;
 		});
 	}
 
@@ -313,12 +314,14 @@ angular.module('dashboardApp').controller('walletController', function($scope, $
 				});
 			});
 			response.data.history.arbitrage.forEach(item => {
-				arbitrageHistory[item.currency].push({
-					date: new Date(item.dateTime).toLocaleString(),
-					amount: (item.type == 'in' ? '+' : '-') + item.amount,
-					type: (item.type == 'in' ? 'from balance' : 'to balance'),
-					status: 'confirmed'
-				});
+				if(!item.profit) {
+					arbitrageHistory[item.currency].push({
+						date: new Date(item.dateTime).toLocaleString(),
+						amount: (item.type == 'in' ? '+' : '-') + item.amount,
+						type: (item.type == 'in' ? 'from balance' : 'to balance'),
+						status: 'confirmed'
+					});
+				}
 			});
 			console.log('balanceHistory:', balanceHistory);
 			console.log('arbitrageHistory:', arbitrageHistory);

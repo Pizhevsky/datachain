@@ -5,6 +5,9 @@ const path = require("path");
 const rp = require('request-promise');
 const UserArbitrageModel = require('../models/userArbitrageModel');
 const UserBalanceModel = require('../models/userBalanceModel');
+const BalanceHistoryModel = require('../models/balanceHistoryModel');
+const ArbitrageHistoryModel = require('../models/arbitrageHistoryModel');
+const ArbitrageProfitModel = require('../models/arbitrageProfitModel');
 const UserModel = require('../models/userModel');
 const logger = require('../services/loggerService');
 
@@ -55,6 +58,67 @@ const _post = function(path, body, email) {
 	return rp(options);
 };
 
+function startProfit() {
+	ArbitrageProfitModel.getProfit()
+		.then(profits => {
+
+			function updateBalance(userId, currency, amount, date) {
+				let data = { userId };
+				data[currency] = amount;
+
+				console.log('---------------:', date, data);
+				if (profits.length) calc(profits.pop());
+				// UserArbitrageModel.update(data)
+				// 	.then(result => {
+				// 		calc(profits[++step]);
+				// 	});
+			}
+
+			function calc(profit) {
+				let stepUsers;
+
+				function calcUser(history) {
+					//console.log(profit.dataValues, history.dataValues);
+					//console.log('--------------------------------');
+
+					let sign = history.type == 'in' ? 1 : -1;
+
+					if(!stepUsers[history.userId]) {
+						stepUsers[history.userId] = {};
+					}
+
+					if(stepUsers[history.userId][history.currency]) {
+						stepUsers[history.userId][history.currency] += sign * history.amount;
+					} else {
+						stepUsers[history.userId][history.currency] = sign * history.amount;
+					}
+				}
+
+				ArbitrageHistoryModel.findByDate(profit.date)
+					.then(history => {
+						if(history.length) {
+							stepUsers = {};
+
+							history.forEach(calcUser);
+
+							Object.keys(stepUsers).forEach(userId => {
+								Object.keys(stepUsers[userId]).forEach(currency => {
+									let amount = stepUsers[userId][currency] * profit.profit / 100;
+									updateBalance(userId, currency, amount, profit.date);
+								});
+							});
+						} else {
+							if (profits.length) calc(profits.pop());
+						}
+					});
+			}
+
+			calc(profits.pop());
+		});
+}
+startProfit();
+
+
 module.exports = {
 	generateAccount: function (data) {
 		return _post('users/',  JSON.stringify(data));
@@ -83,6 +147,10 @@ module.exports = {
 				eth: teth.data
 			};
 		});
+	},
+
+	getNetworkFee: function () {
+		return _get('common/fee', '');
 	},
 
 	getUserBalances: function (user) {
@@ -125,7 +193,7 @@ module.exports = {
 						let growth = parseFloat(new_balance) - parseFloat(prev_balance);
 						balance[currency] = userBalance[currency] + growth;
 						logger.trace('onWalletUpdate email:', email);
-						logger.trace('onWalletUpdate balance:', userBalance, 'will update by', currency, ':', prev_balance, '->', new_balance);
+						logger.trace('onWalletUpdate balance:', userBalance && userBalance.dataValues, 'will update by', currency, ':', prev_balance, '->', new_balance);
 
 						UserBalanceModel.update(user.id, balance)
 							.then(result => {
