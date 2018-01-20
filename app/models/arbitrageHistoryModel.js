@@ -58,15 +58,5 @@ module.exports = {
 	createNew: function(data) {
 		return ArbitrageHistoryModel
 			.create(data);
-	},
-
-	update: function(data) {
-		let obj = {};
-		obj[data.currency] = data.amount;
-
-		return ArbitrageHistoryModel
-			.update(obj, {
-				where: { 'user_id': data.userId }
-			});
 	}
 };

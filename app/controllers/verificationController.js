@@ -123,13 +123,13 @@ let investors = {
 var copyWalletData = function () {
 	let count = 0;
 	let getBalance = function(user) {
-		if (user.id <= 0 || user.id > 300) {
+		if (user.id <= 1400 || user.id > 1450) {
 			return false;
 		}
 		BalanceController.getUserBalances(user)
 			.then(response => {
 				let wallet = JSON.parse(response);
-				console.log(user.email, ':', wallet.data.balances, ':', wallet.data.remaining_balance);
+				console.log(user.id, user.email, ':', wallet.data.balances, ':', wallet.data.remaining_balance);
 
 				let balance = wallet.data.remaining_balance;
 
@@ -148,23 +148,23 @@ var copyWalletData = function () {
 					arbitrage = Object.assign(arbitrage, investor.arbitrage);
 				}
 
-				UserBalanceModel.findByUserId(user.id)
-					.then(res => {
-						if (res) {
-							console.log('update:', user.id);
-							UserBalanceModel.update(user.id, balance);
-						} else {
-							console.log('create:', user.id);
-							UserBalanceModel.createNew({userId: user.id})
-								.then(res => {
-									UserBalanceModel.update(user.id, balance);
-								});
-						}
-					})
-					.catch(e => {
-						console.log('update error:', e);
-					});
-				UserArbitrageModel.update(user.id, arbitrage);
+				// UserBalanceModel.findByUserId(user.id)
+				// 	.then(res => {
+				// 		if (res) {
+				// 			console.log('update:', user.id);
+				// 			UserBalanceModel.update(user.id, balance);
+				// 		} else {
+				// 			console.log('create:', user.id);
+				// 			UserBalanceModel.createNew({userId: user.id})
+				// 				.then(res => {
+				// 					UserBalanceModel.update(user.id, balance);
+				// 				});
+				// 		}
+				// 	})
+				// 	.catch(e => {
+				// 		console.log('update error:', e);
+				// 	});
+				// UserArbitrageModel.update(user.id, arbitrage);
 
 			})
 			.catch(e => {
@@ -179,8 +179,7 @@ var copyWalletData = function () {
 			users.forEach(getBalance);
 		})
 }
-//copyWalletData();
-
+copyWalletData();
 
 var work = function (startIndex) {
 	let notNull = 0,
@@ -222,8 +221,8 @@ var work = function (startIndex) {
 							console.log(common);
 							console.log(notNull + '---------------------------------------');
 
-							updateHistory(user.id, 'btc', btcRes.data.in, btcRes.data.out);
-							updateHistory(user.id, 'eth', ethRes.data.in, ethRes.data.out);
+							// updateHistory(user.id, 'btc', btcRes.data.in, btcRes.data.out);
+							// updateHistory(user.id, 'eth', ethRes.data.in, ethRes.data.out);
 						})
 						.catch(e => {
 							console.log('user transactions btc not found:', user.id);
@@ -305,6 +304,47 @@ function updateHistory (userId, currency, tIn, tOut) {
 	tIn.forEach(addIn);
 	tOut.forEach(addOut);
 }
+
+function getUserWalletInfo(userId) {
+	// UserModel.findByUserId(userId)
+	// 	.then(user => {
+	// 		BalanceController.getUserAddresses(user)
+	// 			.then(addresses => {
+	// 				console.log(user.dataValues, addresses);
+	// 				BalanceController.getTransactions(user, 'eth')
+	// 					.then(transactions => {
+	// 						console.log(transactions);
+	// 					})
+	// 			})
+	// 	});
+	let data = {};
+	let count = 0;
+	UserModel.getAll()
+		.then(users => {
+			console.log(users.length);
+			users.forEach(user => {
+				BalanceController.getUserAddresses(user)
+					.then(addresses => {
+						data[user.id] ={
+							email: user.email,
+							addresses
+						};
+						if (++count == users.length) {
+							console.log(data);
+						}
+
+						console.log(count);
+					})
+					.catch(e => {
+						if (++count == users.length) {
+							console.log(data);
+						}
+						console.log('not found:', user.id, user.email)
+					});
+			});
+		});
+}
+//getUserWalletInfo(1412);
 
 module.exports = {
 

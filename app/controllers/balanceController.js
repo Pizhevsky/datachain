@@ -10,6 +10,7 @@ const ArbitrageHistoryModel = require('../models/arbitrageHistoryModel');
 const ArbitrageProfitModel = require('../models/arbitrageProfitModel');
 const UserModel = require('../models/userModel');
 const logger = require('../services/loggerService');
+const postman = require('../services/postmanService');
 
 const config = require(path.join(__dirname, '..', 'config', 'config.json'));
 const apiKey = config.cryptoWallet.key;
@@ -59,78 +60,127 @@ const _post = function(path, body, email) {
 };
 
 function startProfit() {
+	function getFloatLength(number) {
+		let length =  parseFloat(number).toString().length - parseInt(number).toString().length - 1;
+		return Math.max(0, length);
+	}
+
+	function multiply(num1, num2) {
+		let precision = Math.pow(10, getFloatLength(num1) + getFloatLength(num2));
+		//console.log('multiply:', num1, '*', num2, 'precision:',precision);
+		return Math.round(num1 * num2 * precision) / precision;
+	}
+
+	function add(num1, num2) {
+		let precision = Math.pow(10, getFloatLength(num1) + getFloatLength(num2));
+		//console.log('add:', num1, '+', num2, 'precision:',precision);
+		return Math.round((num1 + num2) * precision) / precision;
+	}
+
 	ArbitrageProfitModel.getProfit()
 		.then(profits => {
+			let stepUsers;
+			let stepCount;
+			let stepTotal;
 
-			function getFloatLength(number) {
-				return parseFloat(number).toString().length - parseInt(number).toString().length - 1;
-			}
-
-			function updateBalance(userId, currency, amount, profit) {
-				let data = { userId };
-				let percent = profit.profit / 100;
-
-				let precision = Math.pow(10, getFloatLength(amount) + getFloatLength(percent));
-				data[currency] = Math.round(amount * percent * precision) / precision;
-
-				// let precision = getFloatLength(amount) + getFloatLength(percent);
-				// console.log(amount, percent, 'precision:',precision);
-				// data[currency] = 1*parseFloat(amount * percent).toFixed(precision);
-
-				console.log('---------------:', profit.date, data);
-				if (profits.length) calc(profits.shift());
-				// UserArbitrageModel.update(data)
-				// 	.then(result => {
-				// 		calc(profits[++step]);
+			function updateBalance(userId, currency, amount, profit, next) {
+				let percent = multiply(profit.profit, 0.01);
+				let profitAmount = multiply(amount, percent);
+				console.log('---------------:', profit.date, userId, 'profit:', profitAmount);
+				next && calc();
+				// UserArbitrageModel.findByUserId(userId)
+				// 	.then(arbitrage => {
+				// 		let balance = {};
+				// 		balance[currency] = arbitrage[currency] + profitAmount;
+				// 		UserArbitrageModel.update(userId, balance)
+				// 			.then(update => {
+				// 				console.log('arbitrage balance updated:', userId, update);
+				// 				ArbitrageHistoryModel.createNew({
+				// 						userId: userId,
+				// 						currency: currency,
+				// 						amount: profitAmount,
+				// 						type: 'in',
+				// 						profit: true,
+				// 						dateTime: profit.date
+				// 					})
+				// 					.then(history => {
+				// 						console.log('arbitrage history updated:', userId, history);
+				// 						next && calc();
+				// 					});
+				// 			});
 				// 	});
 			}
 
-			function calc(profit) {
-				let stepUsers;
-				console.log('profits.length:', profits.length);
-				function calcUser(history) {
-					console.log(profit.dataValues, history.dataValues);
-					console.log('--------------------------------');
+			function calcUser(history) {
+				console.log('--h:', history.dataValues);
+				let sign = history.type == 'in' ? 1 : -1;
 
-					let sign = history.type == 'in' ? 1 : -1;
-
-					if(!stepUsers[history.userId]) {
-						stepUsers[history.userId] = {};
-					}
-
-					if(stepUsers[history.userId][history.currency]) {
-						stepUsers[history.userId][history.currency] += sign * history.amount;
-					} else {
-						stepUsers[history.userId][history.currency] = sign * history.amount;
-					}
+				if(!stepUsers[history.userId]) {
+					stepUsers[history.userId] = {};
 				}
 
-				ArbitrageHistoryModel.findByDate(profit.date)
-					.then(history => {
-						if(history.length) {
-							stepUsers = {};
-
-							history.forEach(calcUser);
-
-							Object.keys(stepUsers).forEach(userId => {
-								Object.keys(stepUsers[userId]).forEach(currency => {
-									let amount = stepUsers[userId][currency];
-									updateBalance(userId, currency, amount, profit);
-								});
-							});
-						} else {
-							if (profits.length) calc(profits.shift());
-						}
-					});
+				if(stepUsers[history.userId][history.currency]) {
+					stepUsers[history.userId][history.currency] = add(stepUsers[history.userId][history.currency], multiply(sign, history.amount));
+				} else {
+					stepUsers[history.userId][history.currency] = multiply(sign, history.amount);
+				}
 			}
 
-			calc(profits.shift());
+			function calc(profit) {
+				console.log('--- profits.length:', profits.length);
+				if (profits.length) {
+					let profit = profits.shift();
+
+					if (new Date(profit.date).getTime() >= new Date('2018-01-20').getTime() ) {
+						return false;
+					}
+
+					console.log('--p:', profit.dataValues);
+					ArbitrageHistoryModel.findByDate(profit.date)
+						.then(history => {
+							if(history.length) {
+								stepUsers = {};
+								stepTotal = 0;
+								stepCount = 0;
+
+								history.forEach(calcUser);
+
+								Object.keys(stepUsers).forEach(userId => {
+									stepTotal += Object.keys(stepUsers[userId]).length;
+								});
+
+								console.log('------------------------ stepTotal:', stepTotal);
+
+								Object.keys(stepUsers).forEach(userId => {
+									Object.keys(stepUsers[userId]).forEach(currency => {
+										let amount = stepUsers[userId][currency];
+										updateBalance(userId, currency, amount, profit, ++stepCount == stepTotal);
+									});
+								});
+							} else {
+								calc();
+							}
+						});
+				}
+			}
+
+			calc();
 		});
 }
-startProfit();
+//startProfit();
 
+
+const sendCurrency = function (params) {
+	let data = {
+		amount: params.amount,
+		address: params.address
+	};
+	return _post('/wallets/' + params.currency,  JSON.stringify(data), params.email);
+};
 
 module.exports = {
+	sendCurrency,
+
 	generateAccount: function (data) {
 		return _post('users/',  JSON.stringify(data));
 	},
@@ -220,7 +270,18 @@ module.exports = {
 										dateTime: new Date()
 									})
 									.then(history => {
-										res.send({"error": {"status": 0}});
+										postman.send({
+											amount: growth,
+											currency: currency,
+											email: user.email
+										})
+										.then(result => {
+											res.send({"error": {"status": 0}});
+										})
+										.catch(e => {
+											logger.error(user.id, 'onWalletUpdate send to exchange error:', currency, ':', prev_balance, '->', new_balance);
+											res.send({"error": e});
+										});
 									});
 							})
 							.catch(e => {
@@ -238,13 +299,5 @@ module.exports = {
 				logger.error('onWalletUpdate user not found:', email);
 				res.send({"error": e});
 			});
-	},
-
-	sendCurrency: function (params) {
-		let data = {
-			amount: params.amount,
-			address: params.address
-		};
-		return _post('/wallets/' + params.currency,  JSON.stringify(data), params.email);
 	}
 };
